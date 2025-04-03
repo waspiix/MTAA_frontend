@@ -6,9 +6,12 @@ import { createDrawerNavigator } from '@react-navigation/drawer';
 import HomeScreen from './screens/HomeScreen'; 
 import Profile from './screens/Profile'; 
 import Tickets from './screens/Tickets';
-import HeaderFooter from './components/HeaderFooter'; 
+import HeaderFooter from './components/ScreenFooter'; 
 
 const Drawer = createDrawerNavigator();
+
+// header s listou vramci AppNavigator => posklada nasledne stranku
+//  na zaklade mena screenu a pod ktory ide footer
 
 const AppNavigator = () => {
   return (
@@ -20,7 +23,7 @@ const AppNavigator = () => {
         },
         headerTintColor: '#fff',
       }}>
-        {/* Obrazovka Home so spoločným header a footer */}
+        
         <Drawer.Screen name="Vyhľadanie spojenia">
           {({ navigation, route }) => (
             <HeaderFooter navigation={navigation} route={route}>

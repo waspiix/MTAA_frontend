@@ -28,7 +28,7 @@ const HomeScreen = () => {
 
   return (
     <View style={styles.container}>
-      {/* Horná modrá časť */}
+      
       <View style={styles.topSection}>
         <TextInput
           style={styles.input}
@@ -48,7 +48,7 @@ const HomeScreen = () => {
         <Text style={styles.dateText}>Vybraný dátum: {date.toDateString()}</Text>
       </View>
 
-      {/* Spodná biela časť */}
+      
       <View style={styles.bottomSection}>
         <Button title="Vyhľadaj spoj" onPress={handleSearch} />
       </View>
