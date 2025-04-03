@@ -9,14 +9,10 @@ const HeaderFooter = ({ navigation, children }) => {
 
   return (
     <View style={styles.container}>
-      
-
-      {/* Obsah stránky - Tu sa zobrazuje obsah, ktorý je poskytnutý ako deti */}
       <View style={styles.content}>
-        {children}  {/* Sem sa vloží obsah obrazovky (napr. HomeScreen) */}
+        {children}
       </View>
 
-      {/* Footer - Navigačné ikonky */}
       <View style={styles.footer}>
         <TouchableOpacity style={styles.icon} onPress={() => navigation.navigate("Vyhľadanie spojenia")}>
             <Ionicons name="home" size={30} color="white" />
