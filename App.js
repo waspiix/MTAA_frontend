@@ -1,29 +1,32 @@
 import React from 'react';
 import { NavigationContainer } from '@react-navigation/native';
 import { createDrawerNavigator } from '@react-navigation/drawer';
+import { UserProvider, useUser } from './context/UserContext';
 
-// screen importy
+// screen imports
 import HomeScreen from './screens/HomeScreen'; 
 import Profile from './screens/Profile'; 
 import Tickets from './screens/Tickets';
 import HeaderFooter from './components/ScreenFooter'; 
+import CreateStationScreen from './screens/CreateStationsScreen';
+import CreateTrainScreen from './screens/CreateTrainScreen';
 
 const Drawer = createDrawerNavigator();
 
-// header s listou vramci AppNavigator => posklada nasledne stranku
-//  na zaklade mena screenu a pod ktory ide footer
-
 const AppNavigator = () => {
+  const { user } = useUser(); // Get the user role from context
+
   return (
     <NavigationContainer>
-      <Drawer.Navigator initialRouteName="Vyhľadanie spojenia"
-      screenOptions={{
-        headerStyle: {
-          backgroundColor: '#007bff', 
-        },
-        headerTintColor: '#fff',
-      }}>
-        
+      <Drawer.Navigator
+        initialRouteName="Vyhľadanie spojenia"
+        screenOptions={{
+          headerStyle: {
+            backgroundColor: '#007bff',
+          },
+          headerTintColor: '#fff',
+        }}
+      >
         <Drawer.Screen name="Vyhľadanie spojenia">
           {({ navigation, route }) => (
             <HeaderFooter navigation={navigation} route={route}>
@@ -47,10 +50,33 @@ const AppNavigator = () => {
             </HeaderFooter>
           )}
         </Drawer.Screen>
+
+        {/* Conditionally render admin-only screens */}
+        {user.privilege === 2 && (
+          <Drawer.Screen name="Create Train ADMIN">
+            {({ navigation, route }) => <CreateTrainScreen />}
+          </Drawer.Screen>
+        )}
         
+        {user.privilege === 2 && 'admin' && (
+          <Drawer.Screen name="Create Station ADMIN">
+            {({ navigation, route }) => (
+              <HeaderFooter navigation={navigation} route={route}>
+                <CreateStationScreen />
+              </HeaderFooter>
+            )}
+          </Drawer.Screen>
+        )}
+
       </Drawer.Navigator>
     </NavigationContainer>
   );
 };
 
-export default AppNavigator;
+const App = () => (
+  <UserProvider>
+    <AppNavigator />
+  </UserProvider>
+);
+
+export default App;
