@@ -52,13 +52,13 @@ const AppNavigator = () => {
         </Drawer.Screen>
 
         {/* Conditionally render admin-only screens */}
-        {user.privilege === 2 && (
+        {user.privilege === 1 && (
           <Drawer.Screen name="Create Train ADMIN">
             {({ navigation, route }) => <CreateTrainScreen />}
           </Drawer.Screen>
         )}
         
-        {user.privilege === 2 && 'admin' && (
+        {user.privilege === 1 && (
           <Drawer.Screen name="Create Station ADMIN">
             {({ navigation, route }) => (
               <HeaderFooter navigation={navigation} route={route}>

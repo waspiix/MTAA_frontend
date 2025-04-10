@@ -10,19 +10,28 @@ export default function CreateTrainScreen() {
   const [stations, setStations] = useState([]);
   const [selectedStations, setSelectedStations] = useState([]);
   const [showPicker, setShowPicker] = useState(null);
+  const [searchQuery, setSearchQuery] = useState('');
 
-  useEffect(() => {
-    fetchStations();
-  }, []);
+  const searchStations = async (query) => {
+    if (query.length < 3) {
+      setStations([]); 
+      return;
+    }
 
-  const fetchStations = async () => {
     try {
-      const response = await fetch(`${config.API_URL}/stations`);
+      const response = await fetch(`${config.API_URL}/stations/search`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Accept': 'application/json',
+        },
+        body: JSON.stringify({ starts_with: query }),
+      });
       const data = await response.json();
-      setStations(data.stations || data);
+      setStations(data.stations || data); // Update station list
     } catch (error) {
       console.error(error);
-      Alert.alert('Error', 'Failed to fetch stations');
+      Alert.alert('Error', 'Failed to search stations');
     }
   };
 
@@ -86,7 +95,17 @@ export default function CreateTrainScreen() {
         onChangeText={setTrainName}
       />
 
-      <Text style={styles.label}>Select Stations:</Text>
+      <Text style={styles.label}>Search Stations:</Text>
+      <TextInput
+        style={styles.input}
+        placeholder="Type at least 3 letters"
+        value={searchQuery}
+        onChangeText={(query) => {
+          setSearchQuery(query);
+          searchStations(query);
+        }}
+      />
+
       <FlatList
         data={stations}
         keyExtractor={(item) => item.id.toString()}

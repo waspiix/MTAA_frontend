@@ -15,9 +15,9 @@ const styles = StyleSheet.create({
       padding: 20,
       alignItems: "flex-start",
       justifyContent: "center",
-      height: "35%",
-      gap: 10,
-      paddingTop: 50,
+      
+
+
     },
     bottomSection: {
       flex: 1,
@@ -43,6 +43,12 @@ const styles = StyleSheet.create({
       padding: 10,
       backgroundColor: "#fff",
       borderRadius: 10,
+    },
+    stationItem: {
+      padding: 10,
+      borderBottomWidth: 1,
+      borderBottomColor: "#ccc",
+      backgroundColor: "#fff",
     },
 
   });
