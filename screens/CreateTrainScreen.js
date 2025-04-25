@@ -41,13 +41,26 @@ export default function CreateTrainScreen() {
     setSelectedStations(prev => [...prev, { ...station, departure_time: new Date() }]);
   };
 
-  const handleTimeChange = (event, selectedDate, index) => {
+  const handleTimeChange = (event, selectedTime, index) => {
     if (event.type === 'dismissed') {
       setShowPicker(null);
       return;
     }
+
     const updated = [...selectedStations];
-    updated[index].departure_time = selectedDate;
+    const currentDate = updated[index].departure_time || new Date(); // Use existing date or default to now
+
+    // Merge the selected time with the existing date
+    const updatedDateTime = new Date(
+      currentDate.getFullYear(),
+      currentDate.getMonth(),
+      currentDate.getDate(),
+      selectedTime.getHours(),
+      selectedTime.getMinutes(),
+      selectedTime.getSeconds()
+    );
+
+    updated[index].departure_time = updatedDateTime;
     setSelectedStations(updated);
     setShowPicker(null);
   };
@@ -65,7 +78,7 @@ export default function CreateTrainScreen() {
           routes: selectedStations.map((s, i) => ({
             station_id: s.id,
             sequence_number: i + 1,
-            departure_time: s.departure_time.toISOString(),
+            departure_time: formatDateTime(s.departure_time), // Format the date and time
           })),
         }),
       });
@@ -83,6 +96,12 @@ export default function CreateTrainScreen() {
       console.error(error);
       Alert.alert('Error', 'Could not connect to server');
     }
+  };
+
+  // Helper function to format date and time
+  const formatDateTime = (date) => {
+    const pad = (num) => (num < 10 ? `0${num}` : num);
+    return `${date.getFullYear()}-${pad(date.getMonth() + 1)}-${pad(date.getDate())} ${pad(date.getHours())}:${pad(date.getMinutes())}:${pad(date.getSeconds())}`;
   };
 
   return (

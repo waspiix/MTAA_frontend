@@ -1,17 +1,42 @@
 import React from 'react';
 import { NavigationContainer } from '@react-navigation/native';
 import { createDrawerNavigator } from '@react-navigation/drawer';
+import { createStackNavigator } from '@react-navigation/stack';
 import { UserProvider, useUser } from './context/UserContext';
 
 // screen imports
-import HomeScreen from './screens/HomeScreen'; 
-import Profile from './screens/Profile'; 
+import HomeScreen from './screens/HomeScreen';
+import Profile from './screens/Profile';
 import Tickets from './screens/Tickets';
-import HeaderFooter from './components/ScreenFooter'; 
+import HeaderFooter from './components/ScreenFooter';
 import CreateStationScreen from './screens/CreateStationsScreen';
 import CreateTrainScreen from './screens/CreateTrainScreen';
+import SearchResultsScreen from './screens/SearchResultsScreen';
+import BuyTicketScreen from './screens/BuyTicketScreen';
 
 const Drawer = createDrawerNavigator();
+const Stack = createStackNavigator();
+
+// Stack Navigator for Train-related Screens
+const TrainStackNavigator = () => (
+  <Stack.Navigator>
+    <Stack.Screen
+      name="Home"
+      component={HomeScreen}
+      options={{ headerShown: false }} // Hide header for the main screen
+    />
+    <Stack.Screen
+      name="Search Results"
+      component={SearchResultsScreen}
+      options={{ headerShown: false }}
+    />
+    <Stack.Screen
+      name="BuyTicket"
+      component={BuyTicketScreen}
+      options={{ title: 'Buy Ticket' }}
+    />
+  </Stack.Navigator>
+);
 
 const AppNavigator = () => {
   const { user } = useUser(); // Get the user role from context
@@ -27,13 +52,8 @@ const AppNavigator = () => {
           headerTintColor: '#fff',
         }}
       >
-        <Drawer.Screen name="Vyhľadanie spojenia">
-          {({ navigation, route }) => (
-            <HeaderFooter navigation={navigation} route={route}>
-              <HomeScreen />
-            </HeaderFooter>
-          )}
-        </Drawer.Screen>
+        {/* Use TrainStackNavigator for train-related screens */}
+        <Drawer.Screen name="Vyhľadanie spojenia" component={TrainStackNavigator} />
 
         <Drawer.Screen name="Profile">
           {({ navigation, route }) => (
@@ -57,7 +77,7 @@ const AppNavigator = () => {
             {({ navigation, route }) => <CreateTrainScreen />}
           </Drawer.Screen>
         )}
-        
+
         {user.privilege === 1 && (
           <Drawer.Screen name="Create Station ADMIN">
             {({ navigation, route }) => (
@@ -67,7 +87,6 @@ const AppNavigator = () => {
             )}
           </Drawer.Screen>
         )}
-
       </Drawer.Navigator>
     </NavigationContainer>
   );

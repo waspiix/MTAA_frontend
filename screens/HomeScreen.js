@@ -2,6 +2,7 @@ import React, { useState, useCallback } from "react";
 import { View, Text, TextInput, FlatList, TouchableOpacity, Alert, StyleSheet } from "react-native";
 import { DateTimePickerAndroid } from "@react-native-community/datetimepicker";
 import config from "../config.json";
+import { useNavigation } from "@react-navigation/native";
 
 const HomeScreen = () => {
   const [fromQuery, setFromQuery] = useState("");
@@ -11,7 +12,9 @@ const HomeScreen = () => {
   const [selectedFrom, setSelectedFrom] = useState(null);
   const [selectedTo, setSelectedTo] = useState(null);
   const [date, setDate] = useState(new Date());
+  const [time, setTime] = useState(new Date());
   const [debounceTimeout, setDebounceTimeout] = useState(null);
+  const navigation = useNavigation();
 
   const searchStations = async (query, setStations) => {
     if (query.length < 3) {
@@ -47,6 +50,7 @@ const HomeScreen = () => {
 
     setDebounceTimeout(timeout); // Save the new timeout
   }, [debounceTimeout]);
+  
 
   const showDatePicker = () => {
     DateTimePickerAndroid.open({
@@ -61,15 +65,53 @@ const HomeScreen = () => {
     });
   };
 
-  const handleSearch = () => {
+  const showTimePicker = () => {
+    DateTimePickerAndroid.open({
+      value: time,
+      onChange: (event, selectedTime) => {
+        if (selectedTime) {
+          setTime(selectedTime);
+        }
+      },
+      mode: "time",
+      display: "default",
+    });
+  };
+
+  const handleSearch = async () => {
     if (!selectedFrom || !selectedTo) {
       Alert.alert("Error", "Please select both 'From' and 'To' stations.");
       return;
     }
-    Alert.alert(
-      "Search",
-      `Searching for connections from ${selectedFrom.name} to ${selectedTo.name} on ${date.toDateString()}`
-    );
+
+    const departureTime = `${date.toISOString().split("T")[0]} ${time.toTimeString().split(" ")[0]}`;
+
+    try {
+      const response = await fetch(`${config.API_URL}/trains/search`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Accept: "application/json",
+        },
+        body: JSON.stringify({
+          from_station: selectedFrom.id,
+          to_station: selectedTo.id,
+          departure_time: departureTime,
+        }),
+      });
+
+      const data = await response.json();
+
+      if (response.ok && data.trains.length > 0) {
+        console.log("Trains found:", data.trains); // Debugging line to check the trains data
+        navigation.navigate('Search Results', { trains: data.trains });
+      } else {
+        Alert.alert("No Results", "No trains found for the selected criteria.");
+      }
+    } catch (error) {
+      console.error(error);
+      Alert.alert("Error", "Failed to search for trains.");
+    }
   };
 
   return (
@@ -144,9 +186,16 @@ const HomeScreen = () => {
 
       {/* Date Picker */}
       <TouchableOpacity style={styles.dateButton} onPress={showDatePicker}>
-        <Text style={styles.dateButtonText}>Vybrať dátum</Text>
-      </TouchableOpacity>
-      <Text style={styles.dateText}>Vybraný dátum: {date.toDateString()}</Text>
+  <Text style={styles.dateButtonText}>Vybrať dátum</Text>
+</TouchableOpacity>
+<Text style={styles.dateText}>Vybraný dátum: {date.toDateString()}</Text>
+
+{/* Time Picker */}
+<TouchableOpacity style={styles.dateButton} onPress={showTimePicker}>
+  <Text style={styles.dateButtonText}>Vybrať čas</Text>
+</TouchableOpacity>
+
+<Text style={styles.dateText}>Vybraný čas: {time.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</Text>
 
       {/* Search Button */}
       <TouchableOpacity style={styles.searchButton} onPress={handleSearch}>

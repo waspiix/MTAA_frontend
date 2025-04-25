@@ -15,10 +15,8 @@ const styles = StyleSheet.create({
       padding: 20,
       alignItems: "flex-start",
       justifyContent: "center",
-      
-
-
     },
+    
     bottomSection: {
       flex: 1,
       backgroundColor: "#f5f5f5", 
