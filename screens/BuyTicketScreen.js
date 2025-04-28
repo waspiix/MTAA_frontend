@@ -1,8 +1,41 @@
 import React from 'react';
 import { View, Text, Button, StyleSheet } from 'react-native';
+import config from '../config.json';
+import { useNavigation } from '@react-navigation/native';
+
+
+
+
 
 export default function BuyTicketScreen({ route, navigation }) {
   const { train } = route.params;
+
+  // When user clicks "Buy Ticket"
+const startPayment = async () => {
+  try {
+    const response = await fetch(`${config.API_URL}/payments/start`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({}), // sending empty body like in axios
+    });
+
+    if (!response.ok) {
+      throw new Error(`HTTP error! status: ${response.status}`);
+    }
+
+    const data = await response.json();
+    const paymentUrl = data.url;
+
+    navigation.navigate('PaymentScreen', { paymentUrl });
+
+  } catch (error) {
+    console.error(error);
+    // show error message
+  }
+};
+
 
   return (
     <View style={styles.container}>
@@ -16,8 +49,9 @@ export default function BuyTicketScreen({ route, navigation }) {
         title="Confirm Purchase"
         onPress={() => {
           // Handle ticket purchase logic here
-          alert('Ticket purchased successfully!');
-          navigation.goBack();
+          
+          startPayment(); // Call the payment function
+          
         }}
       />
     </View>

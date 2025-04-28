@@ -13,6 +13,7 @@ import CreateStationScreen from './screens/CreateStationsScreen';
 import CreateTrainScreen from './screens/CreateTrainScreen';
 import SearchResultsScreen from './screens/SearchResultsScreen';
 import BuyTicketScreen from './screens/BuyTicketScreen';
+import PaymentScreen from './screens/PaymentWallScreen';
 
 const Drawer = createDrawerNavigator();
 const Stack = createStackNavigator();
@@ -33,7 +34,12 @@ const TrainStackNavigator = () => (
     <Stack.Screen
       name="BuyTicket"
       component={BuyTicketScreen}
-      options={{ title: 'Buy Ticket' }}
+      options={{ headerShown: false }}
+    />
+    <Stack.Screen
+      name="PaymentScreen"
+      component={PaymentScreen}
+      options={{ headerShown: false }}
     />
   </Stack.Navigator>
 );
