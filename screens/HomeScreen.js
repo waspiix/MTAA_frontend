@@ -101,9 +101,9 @@ const HomeScreen = () => {
       });
 
       const data = await response.json();
+      console.log("Trains found:", data.trains); // Debugging line to check the trains data
 
       if (response.ok && data.trains.length > 0) {
-        console.log("Trains found:", data.trains); // Debugging line to check the trains data
         navigation.navigate('Search Results', { trains: data.trains });
       } else {
         Alert.alert("No Results", "No trains found for the selected criteria.");
