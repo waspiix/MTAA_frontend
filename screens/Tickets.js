@@ -2,11 +2,15 @@ import React, { useState, useEffect } from "react";
 import { View, Text, FlatList, TouchableOpacity, Alert, StyleSheet } from "react-native";
 import styles from "../styles"; // Import shared styles
 import config from "../config.json"; // Import API URL from config
+import { useUser } from "../context/UserContext"; // Import useUser hook
 
 const Tickets = ({ navigation }) => {
   const [tickets, setTickets] = useState([]);
   const [loading, setLoading] = useState(true);
 
+
+  const { user } = useUser(); // Access the user context to get the token and user info
+  const token = user.token; // Assuming you have a token in your user context
   // Fetch tickets from the API
   const fetchTickets = async () => {
     try {
@@ -15,6 +19,7 @@ const Tickets = ({ navigation }) => {
         headers: {
           "Content-Type": "application/json",
           Accept: "application/json",
+          Authorization: `Bearer ${token}`,
         },
       });
 

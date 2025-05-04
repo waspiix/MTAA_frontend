@@ -1,40 +1,48 @@
 import React from 'react';
-import { View, Text, Button, StyleSheet } from 'react-native';
+import { View, Text, Button, StyleSheet, Alert } from 'react-native';
 import config from '../config.json';
 import { useNavigation } from '@react-navigation/native';
-
+import { useUser } from '../context/UserContext'; // Import useUser hook
 
 
 
 
 export default function BuyTicketScreen({ route, navigation }) {
   const { train } = route.params;
+  const { user } = useUser(); // Access the user context to get the token and user info
 
   // When user clicks "Buy Ticket"
-const startPayment = async () => {
-  try {
-    const response = await fetch(`${config.API_URL}/payments/start`, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({}), // sending empty body like in axios
-    });
+  const startPayment = async () => {
+    try {
 
-    if (!response.ok) {
-      throw new Error(`HTTP error! status: ${response.status}`);
+      const response = await fetch(`${config.API_URL}/payment/start`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          Accept: 'application/json',
+          Authorization: `Bearer ${user.token}`, // Include the token for authentication
+        },
+        body: JSON.stringify({
+          user_id: user.id, // User ID from context
+          train_id: train.id, // Train ID from route params
+          start_station: train.routes[0].station_name, // Start station
+          end_station: train.routes[train.routes.length - 1].station_name, // End station
+        }),
+      });
+
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
+
+      const data = await response.json();
+      const paymentUrl = data.url;
+
+      navigation.navigate('PaymentScreen', { paymentUrl });
+    } catch (error) {
+      console.error(error);
+      Alert.alert('Error', 'Failed to start payment. Please try again.');
     }
-
-    const data = await response.json();
-    const paymentUrl = data.url;
-
-    navigation.navigate('PaymentScreen', { paymentUrl });
-
-  } catch (error) {
-    console.error(error);
-    // show error message
-  }
-};
+  };
 
 
   return (

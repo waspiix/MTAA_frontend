@@ -10,7 +10,7 @@ const PaymentScreen = ({ route, navigation }) => {
       onNavigationStateChange={(navState) => {
         if (navState.url.includes('success')) {
           // Payment succeeded!
-          navigation.navigate('PaymentSuccessScreen');
+          navigation.navigate('Tickets');
         }
         if (navState.url.includes('cancel')) {
           // Payment canceled
