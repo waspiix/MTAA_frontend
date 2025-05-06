@@ -59,7 +59,13 @@ const AppNavigator = () => {
         }}
       >
         {/* Use TrainStackNavigator for train-related screens */}
-        <Drawer.Screen name="Vyhľadanie spojenia" component={TrainStackNavigator} />
+        <Drawer.Screen name="Vyhľadanie spojenia">
+        {({ navigation, route }) => (
+        <HeaderFooter navigation={navigation} route={route}>
+           <TrainStackNavigator />
+        </HeaderFooter>
+        )}
+        </Drawer.Screen>
 
         <Drawer.Screen name="Profile">
           {({ navigation, route }) => (
