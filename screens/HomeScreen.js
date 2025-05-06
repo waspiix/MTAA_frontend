@@ -3,6 +3,7 @@ import { View, Text, TextInput, FlatList, TouchableOpacity, Alert, StyleSheet } 
 import { DateTimePickerAndroid } from "@react-native-community/datetimepicker";
 import config from "../config.json";
 import { useNavigation } from "@react-navigation/native";
+import Icon from "react-native-vector-icons/FontAwesome"; // Import FontAwesome icons
 
 const HomeScreen = () => {
   const [fromQuery, setFromQuery] = useState("");
@@ -116,7 +117,7 @@ const HomeScreen = () => {
 
   return (
     <View style={styles.container}>
-      <Text style={styles.heading}>Vyhľadanie spojenia</Text>
+      <Text style={styles.heading}>Zadajte</Text>
 
       {/* From Station Search */}
       <View style={styles.inputContainer}>
@@ -199,7 +200,10 @@ const HomeScreen = () => {
 
       {/* Search Button */}
       <TouchableOpacity style={styles.searchButton} onPress={handleSearch}>
-        <Text style={styles.searchButtonText}>Vyhľadaj spoj</Text>
+        <View style={styles.searchButtonContent}>
+          <Icon name="train" size={20} color="#fff" style={styles.icon} />
+          <Text style={styles.searchButtonText}>Vyhľadaj spoj</Text>
+        </View>
       </TouchableOpacity>
     </View>
   );
@@ -209,12 +213,12 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     padding: 20,
-    backgroundColor: "#f5f5f5",
+    backgroundColor: "#785C47",
   },
   heading: {
     fontSize: 24,
     fontWeight: "bold",
-    color: "#007bff",
+    color: "#ffffff",
     textAlign: "center",
     marginBottom: 20,
   },
@@ -252,7 +256,7 @@ const styles = StyleSheet.create({
   },
   dateButton: {
     padding: 15,
-    backgroundColor: "#007bff",
+    backgroundColor: "#1F5D6C",
     borderRadius: 10,
     alignItems: "center",
     marginBottom: 10,
@@ -266,10 +270,11 @@ const styles = StyleSheet.create({
     fontSize: 16,
     textAlign: "center",
     marginBottom: 20,
+    color: "#ffffff",
   },
   searchButton: {
     padding: 15,
-    backgroundColor: "#007bff",
+    backgroundColor: "#1F5D6C",
     borderRadius: 10,
     alignItems: "center",
   },
@@ -278,6 +283,13 @@ const styles = StyleSheet.create({
     fontSize: 16,
     fontWeight: "bold",
   },
+  searchButtonContent: {
+  flexDirection: "row", // Align icon and text horizontally
+  alignItems: "center",
+},
+icon: {
+  marginRight: 10, // Add spacing between the icon and text
+},
 });
 
 export default HomeScreen;

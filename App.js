@@ -53,7 +53,7 @@ const AppNavigator = () => {
         initialRouteName="Vyhľadanie spojenia"
         screenOptions={{
           headerStyle: {
-            backgroundColor: '#007bff',
+            backgroundColor: '#A74730',
           },
           headerTintColor: '#fff',
         }}
