@@ -31,12 +31,14 @@ const Tickets = ({ navigation }) => {
           Authorization: `Bearer ${token}`,
         },
       });
+      
 
       if (!response.ok) {
         throw new Error("Failed to fetch tickets");
       }
 
       const data = await response.json();
+      console.log("Response:", data); // Log the response for debugging
       setTickets(data.tickets || []); // Assuming the API returns a `tickets` array
     } catch (error) {
       console.error(error);
@@ -81,10 +83,14 @@ const Tickets = ({ navigation }) => {
                   </View>
 
                   <View style={localStyles.timeRow}>
-                    <Text style={localStyles.label}>Dep:</Text>
-                    <Text style={localStyles.value}>{item.start_station.departure_time}</Text>
-                    <Text style={localStyles.label}>Arr:</Text>
-                    <Text style={localStyles.value}>{item.end_station.departure_time}</Text>
+                    <View>
+                      <Text style={localStyles.label}>Odchod:</Text>
+                      <Text style={localStyles.value}>{item.arrival_time_at}</Text>
+                    </View>
+                    <View>
+                      <Text style={localStyles.label}>Príchod:</Text>
+                      <Text style={localStyles.value}>{item.departure_time_at}</Text>
+                    </View>
                   </View>
 
                   <View style={localStyles.qrContainer}>
@@ -164,7 +170,8 @@ const localStyles = StyleSheet.create({
   },
   timeRow: {
     flexDirection: "row",
-    justifyContent: "space-around",
+    justifyContent: "space-between",
+    alignItems: "center",
     marginVertical: 10,
   },
   label: {
