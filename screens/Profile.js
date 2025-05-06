@@ -32,9 +32,9 @@ const Profile = () => {
     email: "",
     password: "",
     passwordConfirmation: "",
-    discountCard: "",
   });
 
+  // Nastavíme editData automaticky po načítaní používateľa
   useEffect(() => {
     if (user.token) {
       setEditData({
@@ -43,7 +43,6 @@ const Profile = () => {
         email: user.email,
         password: "",
         passwordConfirmation: "",
-        discountCard: user.discountCard || "",
       });
     }
   }, [user]);
@@ -54,6 +53,51 @@ const Profile = () => {
 
   const handleEditChange = (field, value) => {
     setEditData({ ...editData, [field]: value });
+  };
+
+  const handleSubmit = async () => {
+    try {
+      const endpoint = isRegister ? "/register" : "/login";
+      const body = isRegister
+        ? {
+            first_name: formData.firstname,
+            last_name: formData.lastname,
+            email: formData.email,
+            password: formData.password,
+            password_confirmation: formData.passwordConfirmation,
+          }
+        : {
+            email: formData.email,
+            password: formData.password,
+          };
+
+      const response = await fetch(`${config.API_URL}${endpoint}`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Accept: "application/json",
+        },
+        body: JSON.stringify(body),
+      });
+
+      const data = await response.json();
+
+      if (response.ok) {
+        setUser({
+          firstname: data.firstname,
+          lastname: data.lastname,
+          email: data.email,
+          token: data.token,
+          privilege: data.privilege,
+        });
+        Alert.alert("Success", isRegister ? "Registered successfully." : `Login successful. Welcome, ${data.firstname}.`);
+      } else {
+        Alert.alert("Error", data.message || "Something went wrong.");
+      }
+    } catch (error) {
+      console.error(error);
+      Alert.alert("Error", "Could not connect to server.");
+    }
   };
 
   const handleProfileUpdate = async () => {
@@ -71,7 +115,6 @@ const Profile = () => {
           email: editData.email,
           password: editData.password || undefined,
           password_confirmation: editData.passwordConfirmation || undefined,
-          discount_card: editData.discountCard || undefined,
         }),
       });
 
@@ -83,7 +126,6 @@ const Profile = () => {
           firstname: data.user.first_name,
           lastname: data.user.last_name,
           email: data.user.email,
-          discountCard: data.user.discount_card || "",
         });
         setEditMode(false);
         Alert.alert("Úspech", data.message || "Profil bol aktualizovaný.");
@@ -105,7 +147,6 @@ const Profile = () => {
         email: "",
         token: "",
         privilege: 1,
-        discountCard: "",
       });
       Alert.alert("Success", "Logged out successfully.");
     } catch (error) {
@@ -114,6 +155,7 @@ const Profile = () => {
     }
   };
 
+  // ➤ Užívateľ je prihlásený – zobrazíme profil
   if (user.token) {
     return (
       <View style={styles.container}>
@@ -156,9 +198,10 @@ const Profile = () => {
               }
               secureTextEntry
             />
+
             <TextInput
               style={styles.input}
-              placeholder="Zľavová karta (napr. číslo alebo URL)"
+              placeholder="Zľavová karta ID"
               value={editData.discountCard}
               onChangeText={(value) => handleEditChange("discountCard", value)}
             />
@@ -200,10 +243,73 @@ const Profile = () => {
     );
   }
 
-  // Login / Register UI ostáva rovnaký
-  // ...
+  // ➤ Nie je prihlásený – zobrazíme prihlasovací/register formulár
+  return (
+    <View style={styles.container}>
+      <Text style={styles.title}>{isRegister ? "Registrácia" : "Prihlásenie"}</Text>
 
-  // ŠTÝLY
+      {isRegister && (
+        <>
+          <TextInput
+            style={styles.input}
+            placeholder="Meno"
+            value={formData.firstname}
+            onChangeText={(value) => handleInputChange("firstname", value)}
+          />
+          <TextInput
+            style={styles.input}
+            placeholder="Priezvisko"
+            value={formData.lastname}
+            onChangeText={(value) => handleInputChange("lastname", value)}
+          />
+        </>
+      )}
+
+      <TextInput
+        style={styles.input}
+        placeholder="Email"
+        value={formData.email}
+        onChangeText={(value) => handleInputChange("email", value)}
+        keyboardType="email-address"
+      />
+
+      <TextInput
+        style={styles.input}
+        placeholder="Heslo"
+        value={formData.password}
+        onChangeText={(value) => handleInputChange("password", value)}
+        secureTextEntry
+      />
+
+      {isRegister && (
+        <TextInput
+          style={styles.input}
+          placeholder="Potvrď heslo"
+          value={formData.passwordConfirmation}
+          onChangeText={(value) =>
+            handleInputChange("passwordConfirmation", value)
+          }
+          secureTextEntry
+        />
+      )}
+      
+
+      <TouchableOpacity style={styles.button} onPress={handleSubmit}>
+        <Text style={styles.buttonText}>{isRegister ? "Registrovať" : "Prihlásiť sa"}</Text>
+      </TouchableOpacity>
+
+      <TouchableOpacity
+        style={styles.toggleButton}
+        onPress={() => setIsRegister(!isRegister)}
+      >
+        <Text style={styles.toggleButtonText}>
+          {isRegister
+            ? "Máte účet? Prihláste sa"
+            : "Nemáte účet? Registrovať"}
+        </Text>
+      </TouchableOpacity>
+    </View>
+  );
 };
 
 const styles = StyleSheet.create({
@@ -211,14 +317,14 @@ const styles = StyleSheet.create({
     flex: 1,
     justifyContent: "center",
     padding: 20,
-    backgroundColor: "#f0f4f7",
+    backgroundColor: "#785C47",
   },
   title: {
     fontSize: 28,
-    fontWeight: "600",
+    fontWeight: "800",
     textAlign: "center",
     marginBottom: 20,
-    fontFamily: "System",
+    color: "white",
   },
   profileCard: {
     backgroundColor: "#ffffff",
@@ -234,7 +340,6 @@ const styles = StyleSheet.create({
   info: {
     fontSize: 16,
     marginBottom: 10,
-    fontFamily: "System",
   },
   label: {
     fontWeight: "600",
@@ -249,10 +354,9 @@ const styles = StyleSheet.create({
     paddingHorizontal: 15,
     backgroundColor: "#fff",
     fontSize: 16,
-    fontFamily: "System",
   },
   button: {
-    backgroundColor: "#007BFF",
+    backgroundColor: "#1F5D6C",
     padding: 15,
     borderRadius: 12,
     alignItems: "center",
@@ -262,7 +366,6 @@ const styles = StyleSheet.create({
     color: "#fff",
     fontSize: 16,
     fontWeight: "bold",
-    fontFamily: "System",
   },
   toggleButton: {
     marginTop: 10,
@@ -271,7 +374,6 @@ const styles = StyleSheet.create({
   toggleButtonText: {
     color: "#007BFF",
     fontSize: 14,
-    fontFamily: "System",
   },
   profileImage: {
     width: 50,
@@ -283,4 +385,3 @@ const styles = StyleSheet.create({
 });
 
 export default Profile;
-
