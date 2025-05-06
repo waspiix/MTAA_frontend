@@ -86,22 +86,130 @@ const Profile = () => {
   };
 
   if (user.token) {
-    // If the user is logged in, display their profile information
+    const [editMode, setEditMode] = useState(false);
+    const [editData, setEditData] = useState({
+      firstname: user.firstname,
+      lastname: user.lastname,
+      email: user.email,
+      password: "",
+      passwordConfirmation: "",
+    });
+  
+    const handleEditChange = (field, value) => {
+      setEditData({ ...editData, [field]: value });
+    };
+  
+    const handleProfileUpdate = async () => {
+      try {
+        const response = await fetch(`${config.API_URL}/update-profile`, {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            Accept: "application/json",
+            Authorization: `Bearer ${user.token}`,
+          },
+          body: JSON.stringify({
+            first_name: editData.firstname,
+            last_name: editData.lastname,
+            email: editData.email,
+            password: editData.password || undefined,
+            password_confirmation: editData.passwordConfirmation || undefined,
+          }),
+        });
+  
+        const data = await response.json();
+  
+        if (response.ok) {
+          setUser({
+            ...user,
+            firstname: data.user.first_name,
+            lastname: data.user.last_name,
+            email: data.user.email,
+          });
+          setEditMode(false);
+          Alert.alert("Úspech", data.message || "Profil bol aktualizovaný.");
+        } else {
+          Alert.alert("Chyba", data.message || "Aktualizácia zlyhala.");
+        }
+      } catch (error) {
+        console.error(error);
+        Alert.alert("Chyba", "Nepodarilo sa pripojiť k serveru.");
+      }
+    };
+  
     return (
       <View style={styles.container}>
-        <Text style={styles.title}>Profile</Text>
-        <Text style={styles.info}>First Name: {user.firstname}</Text>
-        <Text style={styles.info}>Last Name: {user.lastname}</Text>
-        <Text style={styles.info}>Email: {user.email}</Text>
-        <Text style={styles.info}>
-          Privilege: {user.privilege === 1 ? "User" : "Admin"}
-        </Text>
-        <TouchableOpacity style={styles.button} onPress={handleLogout}>
-          <Text style={styles.buttonText}>Logout</Text>
-        </TouchableOpacity>
+        <Text style={styles.title}>Môj Profil</Text>
+  
+        {editMode ? (
+          <>
+            <TextInput
+              style={styles.input}
+              placeholder="Meno"
+              value={editData.firstname}
+              onChangeText={(value) => handleEditChange("firstname", value)}
+            />
+            <TextInput
+              style={styles.input}
+              placeholder="Priezvisko"
+              value={editData.lastname}
+              onChangeText={(value) => handleEditChange("lastname", value)}
+            />
+            <TextInput
+              style={styles.input}
+              placeholder="Email"
+              value={editData.email}
+              onChangeText={(value) => handleEditChange("email", value)}
+              keyboardType="email-address"
+            />
+            <TextInput
+              style={styles.input}
+              placeholder="Nové heslo (nepovinné)"
+              value={editData.password}
+              onChangeText={(value) => handleEditChange("password", value)}
+              secureTextEntry
+            />
+            <TextInput
+              style={styles.input}
+              placeholder="Potvrď heslo"
+              value={editData.passwordConfirmation}
+              onChangeText={(value) => handleEditChange("passwordConfirmation", value)}
+              secureTextEntry
+            />
+  
+            <TouchableOpacity style={styles.button} onPress={handleProfileUpdate}>
+              <Text style={styles.buttonText}>Uložiť zmeny</Text>
+            </TouchableOpacity>
+  
+            <TouchableOpacity
+              style={styles.toggleButton}
+              onPress={() => setEditMode(false)}
+            >
+              <Text style={styles.toggleButtonText}>Zrušiť</Text>
+            </TouchableOpacity>
+          </>
+        ) : (
+          <>
+            <Text style={styles.info}>Meno: {user.firstname}</Text>
+            <Text style={styles.info}>Priezvisko: {user.lastname}</Text>
+            <Text style={styles.info}>Email: {user.email}</Text>
+            <Text style={styles.info}>
+              Práva: {user.privilege === 1 ? "Používateľ" : "Admin"}
+            </Text>
+  
+            <TouchableOpacity style={styles.button} onPress={() => setEditMode(true)}>
+              <Text style={styles.buttonText}>Upraviť profil</Text>
+            </TouchableOpacity>
+  
+            <TouchableOpacity style={styles.button} onPress={handleLogout}>
+              <Text style={styles.buttonText}>Odhlásiť sa</Text>
+            </TouchableOpacity>
+          </>
+        )}
       </View>
     );
   }
+  
 
   // If the user is not logged in, display the login/register form
   return (
