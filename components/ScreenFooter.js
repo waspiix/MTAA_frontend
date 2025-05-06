@@ -35,12 +35,12 @@ const HeaderFooter = ({ navigation, children }) => {
 const styles = StyleSheet.create({
   container: {
     flex: 1, // Umožňuje prispôsobiť obsah obrazovky
-    backgroundColor: '#f5f5f5', // Svetlá farba pozadia
+    backgroundColor: '#785C47', // hnedo-béžová farba pozadia
     flexDirection: 'column', // Vertikálne usporiadanie
   },
   header: {
     height: 60,
-    backgroundColor: '#007bff', // Modrá farba headera
+    backgroundColor: '#A74730', // sa nepouziva ani xd
     flexDirection: 'row', // Umiestnenie menu a názvu vedľa seba
     alignItems: 'center',
     paddingHorizontal: 10,
@@ -59,7 +59,7 @@ const styles = StyleSheet.create({
   },
   footer: {
     height: 60,
-    backgroundColor: '#007bff', // Modrá farba footeru
+    backgroundColor: '#A74730', // Modrá farba footeru
     flexDirection: 'row',
     justifyContent: 'space-around',
     alignItems: 'center',
