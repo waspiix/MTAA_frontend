@@ -1,22 +1,70 @@
-import React from "react";
-import { View, Text, StyleSheet, FlatList, Dimensions } from "react-native";
+import React, { useEffect, useState, useRef } from "react";
+import {
+  View,
+  Text,
+  StyleSheet,
+  FlatList,
+  Dimensions,
+  Alert,
+  Animated,
+} from "react-native";
 import QRCode from "react-native-qrcode-svg";
 import MapView, { Polyline, Marker } from "react-native-maps";
+import * as Location from "expo-location";
+import TimeLine from "../components/TimeLine";
 
 const TicketInfo = ({ route }) => {
-  const { ticket } = route.params; // Get ticket data from navigation params
+  const { ticket } = route.params;
 
   const stations = ticket.train.routes;
-  const train = ticket.train; // Get train data from ticket
+  const train = ticket.train;
+
   const coordinates = stations.map((station) => ({
     latitude: station.latitude,
     longitude: station.longitude,
   }));
-  
-  console.log("Stations:", stations); // Log the stations for debugging 
+
+  const [currentLocation, setCurrentLocation] = useState(null);
+  const [heading, setHeading] = useState(0);
+  const headingAnim = useRef(new Animated.Value(0)).current;
+
+  useEffect(() => {
+    (async () => {
+      const { status } = await Location.requestForegroundPermissionsAsync();
+      if (status !== "granted") {
+        Alert.alert("Permission Denied", "Location permission is required to show your position.");
+        return;
+      }
+      const location = await Location.getCurrentPositionAsync({});
+      setCurrentLocation({
+        latitude: location.coords.latitude,
+        longitude: location.coords.longitude,
+      });
+
+      // Watch heading (orientation)
+      const headingSubscription = await Location.watchHeadingAsync((headingData) => {
+        setHeading(headingData.trueHeading);
+        headingAnim.setValue(headingData.trueHeading);
+      });
+
+      return () => headingSubscription.remove();
+    })();
+  }, []);
+
   return (
     <View style={styles.container}>
       {/* Map */}
+
+      {/* QR Code */}
+      <View style={styles.qrContainer}>
+        <QRCode value={`ticket-${ticket.id}`} size={200} ecl="H" backgroundColor="white" />
+      </View>
+
+      {/* Train Name */}
+      <Text style={styles.trainName}>{train.name}</Text>
+
+      <TimeLine stations={stations} />
+
       <MapView
         style={styles.map}
         initialRegion={{
@@ -29,28 +77,34 @@ const TicketInfo = ({ route }) => {
         {/* Draw the route */}
         <Polyline coordinates={coordinates} strokeWidth={4} strokeColor="blue" />
 
-        
-      </MapView>
-      {/* QR Code */}
-      <View style={styles.qrContainer}>
-        <QRCode value={`ticket-${ticket.id}`} size={200} backgroundColor="white" />
-      </View>
-
-      {/* Train Name */}
-      <Text style={styles.trainName}>{train.name}</Text>
-
-      {/* Route List */}
-      <FlatList
-        data={stations}
-        keyExtractor={(item) => item.id.toString()}
-        renderItem={({ item }) => (
-          <View style={styles.stationItem}>
-            <Text style={styles.stationName}>{item.name}</Text>
-          </View>
+        {/* Show current position with orientation */}
+        {currentLocation && (
+          <Marker
+            coordinate={currentLocation}
+            title="You are here"
+            anchor={{ x: 0.5, y: 0.5 }}
+          >
+            <Animated.View
+              style={[
+                styles.orientationMarker,
+                {
+                  transform: [
+                    {
+                      rotate: headingAnim.interpolate({
+                        inputRange: [0, 360],
+                        outputRange: ["0deg", "360deg"],
+                      }),
+                    },
+                  ],
+                },
+              ]}
+            >
+              <View style={styles.arrow} />
+              <View style={styles.arrowBase} />
+            </Animated.View>
+          </Marker>
         )}
-        ListHeaderComponent={<Text style={styles.routeHeader}>Train Route:</Text>}
-      />
-
+      </MapView>
     </View>
   );
 };
@@ -85,13 +139,38 @@ const styles = StyleSheet.create({
     fontSize: 16,
   },
   map: {
-    width: Dimensions.get("window").width,
+    width: Dimensions.get("window").width * 0.92,
     height: 300,
     marginTop: 20,
   },
+  orientationMarker: {
+    width: 30, // Slightly larger marker
+    height: 30,
+    justifyContent: "center",
+    alignItems: "center",
+    backgroundColor: "rgba(255, 255, 255, 0.7)",
+    borderRadius: 20,
+    borderWidth: 1,
+    borderColor: "#ccc",
+  },
+  arrow: {
+    width: 0,
+    height: 0,
+    borderLeftWidth: 12, // Wider base for the arrow
+    borderRightWidth: 12,
+    borderBottomWidth: 20, // Longer arrow
+    borderLeftColor: "transparent",
+    borderRightColor: "transparent",
+    borderBottomColor: "red", // Arrow color
+    transform: [{ translateY: -5 }], // Slightly offset to make it more prominent
+  },
+  arrowBase: {
+    width: 6, // Small circle at the base of the arrow
+    height: 6,
+    backgroundColor: "red",
+    borderRadius: 3,
+    marginTop: -5, // Position it at the base of the arrow
+  },
 });
-
-
-
 
 export default TicketInfo;
