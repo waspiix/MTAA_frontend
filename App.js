@@ -14,6 +14,8 @@ import CreateTrainScreen from './screens/CreateTrainScreen';
 import SearchResultsScreen from './screens/SearchResultsScreen';
 import BuyTicketScreen from './screens/BuyTicketScreen';
 import PaymentScreen from './screens/PaymentWallScreen';
+import Settings from './screens/SettingsScreen';
+import { ThemeProvider } from './context/ThemeContext';
 
 const Drawer = createDrawerNavigator();
 const Stack = createStackNavigator();
@@ -67,6 +69,14 @@ const AppNavigator = () => {
         )}
         </Drawer.Screen>
 
+        <Drawer.Screen name="Tickets">
+          {({ navigation, route }) => (
+            <HeaderFooter navigation={navigation} route={route}>
+              <Tickets />
+            </HeaderFooter>
+          )}
+        </Drawer.Screen>
+
         <Drawer.Screen name="Profile">
           {({ navigation, route }) => (
             <HeaderFooter navigation={navigation} route={route}>
@@ -75,13 +85,15 @@ const AppNavigator = () => {
           )}
         </Drawer.Screen>
 
-        <Drawer.Screen name="Tickets">
+        <Drawer.Screen name="Settings">
           {({ navigation, route }) => (
             <HeaderFooter navigation={navigation} route={route}>
-              <Tickets />
+              <Settings />
             </HeaderFooter>
           )}
         </Drawer.Screen>
+
+        
 
         {/* Conditionally render admin-only screens */}
         {user.privilege === 2 && (
@@ -106,8 +118,9 @@ const AppNavigator = () => {
 
 const App = () => (
   <UserProvider>
-  
-    <AppNavigator />
+    <ThemeProvider>
+      <AppNavigator />
+    </ThemeProvider>
   </UserProvider>
 );
 

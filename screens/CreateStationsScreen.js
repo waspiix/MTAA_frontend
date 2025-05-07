@@ -11,6 +11,8 @@ import {
 } from 'react-native';
 import config from '../config.json';
 import { useNavigation } from '@react-navigation/native';
+import { useTheme } from '../context/ThemeContext';
+import { getStyles } from "../styles";
 
 export default function CreateStationScreen() {
   const [name, setName] = useState('');
@@ -18,6 +20,8 @@ export default function CreateStationScreen() {
   const [searchQuery, setSearchQuery] = useState('');
   const [searchResults, setSearchResults] = useState([]);
   const navigation = useNavigation();
+  const { isDarkMode } = useTheme();
+  const styles = getStyles(isDarkMode);  
 
   // Fetch station list
   const fetchStations = async () => {
@@ -94,6 +98,7 @@ export default function CreateStationScreen() {
         value={name}
         onChangeText={setName}
         placeholder="e.g. Central Station"
+        placeholderTextColor={isDarkMode ? '#aaa' : '#888'}
       />
       <Button title="Create Station" onPress={handleCreateStation} />
 
@@ -103,6 +108,7 @@ export default function CreateStationScreen() {
         value={searchQuery}
         onChangeText={handleSearch}
         placeholder="Type at least 3 letters"
+        placeholderTextColor={isDarkMode ? '#aaa' : '#888'}
       />
 
       {/* Overlay for search results */}
@@ -162,27 +168,5 @@ const localStyles = StyleSheet.create({
     padding: 10,
     borderBottomWidth: 1,
     borderBottomColor: '#ccc',
-  },
-});
-
-const styles = StyleSheet.create({
-  container: { padding: 16 },
-  label: { fontSize: 16, marginBottom: 8 },
-  input: {
-    borderWidth: 1,
-    borderColor: '#ccc',
-    padding: 10,
-    marginBottom: 16,
-    borderRadius: 4,
-  },
-  listTitle: {
-    fontSize: 18,
-    fontWeight: 'bold',
-    marginTop: 24,
-    marginBottom: 8,
-  },
-  stationItem: {
-    fontSize: 16,
-    paddingVertical: 4,
   },
 });

@@ -4,6 +4,8 @@ import {
 } from 'react-native';
 import DateTimePicker from '@react-native-community/datetimepicker';
 import config from '../config.json';
+import { useTheme } from '../context/ThemeContext';
+import { getStyles } from "../styles";
 
 export default function CreateTrainScreen() {
   const [trainName, setTrainName] = useState('');
@@ -11,6 +13,8 @@ export default function CreateTrainScreen() {
   const [selectedStations, setSelectedStations] = useState([]);
   const [showPicker, setShowPicker] = useState(null);
   const [searchQuery, setSearchQuery] = useState('');
+  const { isDarkMode } = useTheme();
+  const styles = getStyles(isDarkMode);  
 
   const searchStations = async (query) => {
     if (query.length < 3) {
@@ -164,27 +168,3 @@ export default function CreateTrainScreen() {
   );
 }
 
-const styles = StyleSheet.create({
-  container: { padding: 16 },
-  label: { fontSize: 16, marginVertical: 8 },
-  input: {
-    borderWidth: 1, borderColor: '#ccc', padding: 10,
-    marginBottom: 16, borderRadius: 4,
-  },
-  stationItem: {
-    padding: 10, borderBottomWidth: 1, borderBottomColor: '#eee',
-  },
-  selectedStation: {
-    paddingVertical: 8,
-    borderBottomWidth: 1,
-    borderBottomColor: '#ddd',
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-  },
-  timeButton: {
-    backgroundColor: '#eee',
-    padding: 6,
-    borderRadius: 4,
-  },
-});

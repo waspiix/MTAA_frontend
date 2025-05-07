@@ -1,15 +1,18 @@
 import React from 'react';
-import { View, Text, Button, StyleSheet, Alert } from 'react-native';
+import { View, Text, Button, StyleSheet, Alert, TouchableOpacity } from 'react-native';
 import config from '../config.json';
 import { useNavigation } from '@react-navigation/native';
 import { useUser } from '../context/UserContext'; // Import useUser hook
-
-
+import { useTheme } from '../context/ThemeContext';
+import { getStyles } from "../styles";
+import { Ionicons } from '@expo/vector-icons';
 
 
 export default function BuyTicketScreen({ route, navigation }) {
   const { train } = route.params;
   const { user } = useUser(); // Access the user context to get the token and user info
+  const { isDarkMode } = useTheme();
+  const styles = getStyles(isDarkMode);
 
   // When user clicks "Buy Ticket"
   const startPayment = async () => {
@@ -46,28 +49,20 @@ export default function BuyTicketScreen({ route, navigation }) {
 
 
   return (
-    <View style={styles.container}>
-      <Text style={styles.title}>Buy Ticket for {train.name}</Text>
-      <Text style={styles.subtitle}>From: {train.routes[0].station_name}</Text>
-      <Text style={styles.subtitle}>To: {train.routes[train.routes.length - 1].station_name}</Text>
-      <Text style={styles.subtitle}>Departure: {train.routes[0].departure_time}</Text>
-      <Text style={styles.subtitle}>Arrival: {train.routes[train.routes.length - 1].departure_time}</Text>
+  <View style={styles.container}>
+    <TouchableOpacity onPress={() => navigation.goBack()} style={styles.backButton}>
+      <Ionicons name="arrow-back" size={24} color={isDarkMode ? "#fff" : "#000"} />
+    </TouchableOpacity>
 
-      <Button
-        title="Confirm Purchase"
-        onPress={() => {
-          // Handle ticket purchase logic here
-          
-          startPayment(); // Call the payment function
-          
-        }}
-      />
-    </View>
+    <Text style={styles.title}>Buy Ticket for {train.name}</Text>
+
+    <Text style={styles.subtitle}>From: {train.routes[0].station_name}</Text>
+    <Text style={styles.subtitle}>To: {train.routes[train.routes.length - 1].station_name}</Text>
+    <Text style={styles.subtitle}>Departure: {train.routes[0].departure_time}</Text>
+    <Text style={styles.subtitle}>Arrival: {train.routes[train.routes.length - 1].departure_time}</Text>
+
+    <Button title="Confirm Purchase" onPress={startPayment} />
+  </View>
   );
 }
 
-const styles = StyleSheet.create({
-  container: { flex: 1, padding: 16, justifyContent: 'center', alignItems: 'center' },
-  title: { fontSize: 24, fontWeight: 'bold', marginBottom: 16 },
-  subtitle: { fontSize: 16, marginBottom: 8 },
-});
