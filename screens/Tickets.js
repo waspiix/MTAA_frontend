@@ -38,7 +38,6 @@ const Tickets = ({ navigation }) => {
       }
 
       const data = await response.json();
-      console.log("Response:", data); // Log the response for debugging
       setTickets(data.tickets || []); // Assuming the API returns a `tickets` array
     } catch (error) {
       console.error(error);
@@ -53,7 +52,7 @@ const Tickets = ({ navigation }) => {
   }, []);
 
   const handleTicketPress = (ticket) => {
-    Alert.alert("Ticket Selected", `You selected ticket for ${ticket.train.name}`);
+    navigation.navigate("TicketInfo", { ticket });
   };
 
   return (

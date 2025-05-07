@@ -14,6 +14,7 @@ import CreateTrainScreen from './screens/CreateTrainScreen';
 import SearchResultsScreen from './screens/SearchResultsScreen';
 import BuyTicketScreen from './screens/BuyTicketScreen';
 import PaymentScreen from './screens/PaymentWallScreen';
+import TicketInfo from './screens/TicketInfo';
 
 const Drawer = createDrawerNavigator();
 const Stack = createStackNavigator();
@@ -44,20 +45,36 @@ const TrainStackNavigator = () => (
   </Stack.Navigator>
 );
 
+const TicketsStackNavigator = () => (
+  <Stack.Navigator>
+    <Stack.Screen
+      name="listky"
+      component={Tickets}
+      options={{ headerShown: false }} // Hide header for the main screen
+    />
+    <Stack.Screen
+      name="TicketInfo"
+      component={TicketInfo}
+      options={{ headerShown: false }} // Hide header for the main screen
+    />
+    </Stack.Navigator>
+);
+
 const AppNavigator = () => {
   const { user } = useUser(); // Get the user role from context
 
   return (
     <NavigationContainer>
-      <Drawer.Navigator
-        initialRouteName="Vyhľadanie spojenia"
+      <Drawer.Navigator initialRouteName="Vyhľadanie spojenia"
         screenOptions={{
           headerStyle: {
             backgroundColor: '#A74730',
           },
           headerTintColor: '#fff',
-        }}
-      >
+        }}>
+
+
+
         {/* Use TrainStackNavigator for train-related screens */}
         <Drawer.Screen name="Vyhľadanie spojenia">
         {({ navigation, route }) => (
@@ -78,7 +95,7 @@ const AppNavigator = () => {
         <Drawer.Screen name="Tickets">
           {({ navigation, route }) => (
             <HeaderFooter navigation={navigation} route={route}>
-              <Tickets />
+              <TicketsStackNavigator/>
             </HeaderFooter>
           )}
         </Drawer.Screen>
