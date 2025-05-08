@@ -233,4 +233,10 @@ export const getStyles = (isDarkMode) =>
       alignSelf: "center",
       marginBottom: 20,
     },
+    smallProfileImage: {
+      width: 25,
+      height: 25,
+      borderRadius: 50,
+      alignSelf: "center",
+    },
   });

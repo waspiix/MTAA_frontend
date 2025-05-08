@@ -35,12 +35,10 @@ const HeaderFooter = ({ navigation, children }) => {
 const styles = StyleSheet.create({
   container: {
     flex: 1, // Umožňuje prispôsobiť obsah obrazovky
-    backgroundColor: '#785C47', // hnedo-béžová farba pozadia
     flexDirection: 'column', // Vertikálne usporiadanie
   },
   header: {
     height: 60,
-    backgroundColor: '#A74730', // sa nepouziva ani xd
     flexDirection: 'row', // Umiestnenie menu a názvu vedľa seba
     alignItems: 'center',
     paddingHorizontal: 10,

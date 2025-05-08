@@ -1,5 +1,5 @@
 import React from 'react';
-import { View, Text, Alert, TouchableOpacity, Image, Modal, Button, TextInput } from 'react-native';
+import { View, Text, Alert, TouchableOpacity, ScrollView, Image, Modal, Button, TextInput } from 'react-native';
 import config from '../config.json';
 import { Ionicons } from '@expo/vector-icons';
 import { useUser } from '../context/UserContext';
@@ -83,7 +83,7 @@ export default function BuyTicketScreen({ route, navigation }) {
   };
 
   return (
-    <View style={styles.container}>
+    <ScrollView style={{ flex: 1, backgroundColor: isDarkMode ? '#000' : '#F2F2F2' }} contentContainerStyle={{ padding: 20 ,paddingBottom: 100 }}>
       <TouchableOpacity onPress={() => navigation.goBack()} style={styles.backButton}>
         <Ionicons name="arrow-back" size={24} color={isDarkMode ? '#fff' : '#000'} />
       </TouchableOpacity>
@@ -99,14 +99,34 @@ export default function BuyTicketScreen({ route, navigation }) {
         <Text style={styles.tileSubtitle}>
           Time from now: {calculateTimeFromNow(fromRoute.departure_time)}
         </Text>
+        <Text style={styles.tileSubtitle}>
+          Počet zľavnených lístkov: {train.discounted_tickets}
+        </Text>
       </View>
       
       {trainImageSource && (
         <Image
         source={trainImageSource}
-        style={{ width: '100%', height: 200, resizeMode: 'cover', borderRadius: 8, marginVertical: 16 }}
+        style={{ width: '100%', height: 150, resizeMode: 'cover', borderRadius: 8, marginVertical: 16 }}
         />
       )}
+
+      <View style={styles.tile}>
+        <View style={{ flexDirection: 'row', alignItems: 'center' }}>
+          <Image
+            source={require("../assets/profile_icon.png")}
+            style={styles.smallProfileImage}
+          />
+          <View style={{ marginLeft: 10 }}>
+            <Text style={styles.tileSubtitle}>
+              Meno: {user.firstname} {user.lastname}
+            </Text>
+            <Text style={styles.tileSubtitle}>
+              Zľava: {user.discount ? user.discount : 'Žiadna zľava'}
+            </Text>
+          </View>
+        </View>
+      </View>
 
       <TouchableOpacity style={styles.reserveButton} onPress={() => setModalVisible(true)}>
         <Text style={styles.reserveButtonText}>Miestenka</Text>
@@ -212,6 +232,6 @@ export default function BuyTicketScreen({ route, navigation }) {
       <TouchableOpacity onPress={startPayment} style={styles.button}>
         <Text style={styles.buttonText}>Potvrdiť objednávku</Text>
       </TouchableOpacity>
-    </View>
+    </ScrollView>
   );
 }
