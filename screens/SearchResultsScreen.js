@@ -1,14 +1,19 @@
 import React from 'react';
-import { View, Text, FlatList, StyleSheet, TouchableOpacity } from 'react-native';
+import { View, Text, FlatList, TouchableOpacity } from 'react-native';
+import { Ionicons } from '@expo/vector-icons';
+import { useTheme } from '../context/ThemeContext';
+import { getStyles } from "../styles";
 
 export default function SearchResultsScreen({ route, navigation }) {
   const { trains } = route.params;
+  const { isDarkMode } = useTheme();  
+  const styles = getStyles(isDarkMode);
 
   const renderTrainTile = ({ item }) => {
     const handleTilePress = () => {
-        navigation.navigate('BuyTicket', { train: item });
-      };
-    // Ensure routes array exists and has at least one element
+      navigation.navigate('BuyTicket', { train: item });
+    };
+
     if (!item.routes || item.routes.length === 0) {
       return (
         <View style={styles.tile}>
@@ -18,52 +23,41 @@ export default function SearchResultsScreen({ route, navigation }) {
       );
     }
 
-    const fromRoute = item.routes[0]; // First station in the route
-    const toRoute = item.routes[item.routes.length - 1]; // Last station in the route
+    const fromRoute = item.routes[0];
+    const toRoute = item.routes[item.routes.length - 1];
 
-    // Format departure time without timezone
     const formatTime = (time) => {
-      // Remove timezone offset (e.g., "+00") from the time string
       const sanitizedTime = time.replace(/(\+\d{2}:\d{2}|\+\d{2})$/, '');
       const date = new Date(sanitizedTime);
-      return `${date.getFullYear()}-${(date.getMonth() + 1)
+      return `${date.getFullYear()}-${(date.getMonth() + 1).toString().padStart(2, '0')}-${date
+        .getDate()
         .toString()
-        .padStart(2, '0')}-${date.getDate().toString().padStart(2, '0')} ${date
-        .getHours()
+        .padStart(2, '0')} ${date.getHours().toString().padStart(2, '0')}:${date
+        .getMinutes()
         .toString()
-        .padStart(2, '0')}:${date.getMinutes().toString().padStart(2, '0')}`;
+        .padStart(2, '0')}`;
     };
 
-    // Calculate time difference from now
     const calculateTimeFromNow = (time) => {
-      // Remove timezone offset (e.g., "+00") from the time string
       const sanitizedTime = time.replace(/(\+\d{2}:\d{2}|\+\d{2})$/, '');
       const now = new Date();
       const departureTime = new Date(sanitizedTime);
       const diffInMinutes = Math.round((departureTime - now) / (1000 * 60));
 
-      if (diffInMinutes < 0) {
-        return 'Departed';
-      } else if (diffInMinutes === 0) {
-        return 'Departing now';
-      } else {
-        return `${diffInMinutes} minutes from now`;
-      }
+      if (diffInMinutes < 0) return 'Departed';
+      if (diffInMinutes === 0) return 'Departing now';
+      return `${diffInMinutes} minutes from now`;
     };
 
     return (
       <TouchableOpacity style={styles.tile} onPress={handleTilePress}>
         <Text style={styles.tileTitle}>{item.name}</Text>
-        {fromRoute && fromRoute.station_name && (
-          <Text style={styles.tileSubtitle}>
-            From: {fromRoute.station_name} at {formatTime(fromRoute.departure_time)}
-          </Text>
-        )}
-        {toRoute && toRoute.station_name && (
-          <Text style={styles.tileSubtitle}>
-            To: {toRoute.station_name} at {formatTime(toRoute.departure_time)}
-          </Text>
-        )}
+        <Text style={styles.tileSubtitle}>
+          From: {fromRoute.station_name} at {formatTime(fromRoute.departure_time)}
+        </Text>
+        <Text style={styles.tileSubtitle}>
+          To: {toRoute.station_name} at {formatTime(toRoute.departure_time)}
+        </Text>
         <Text style={styles.tileSubtitle}>
           Time from now: {calculateTimeFromNow(fromRoute.departure_time)}
         </Text>
@@ -73,6 +67,10 @@ export default function SearchResultsScreen({ route, navigation }) {
 
   return (
     <View style={styles.container}>
+      <TouchableOpacity onPress={() => navigation.goBack()} style={styles.backButton}>
+        <Ionicons name="arrow-back" size={24} color={isDarkMode ? "#fff" : "#000"} />
+      </TouchableOpacity>
+
       {trains.length > 0 ? (
         <FlatList
           data={trains}
@@ -85,17 +83,3 @@ export default function SearchResultsScreen({ route, navigation }) {
     </View>
   );
 }
-
-const styles = StyleSheet.create({
-  container: { flex: 1, padding: 16, backgroundColor: '#f5f5f5' },
-  tile: {
-    backgroundColor: '#fff',
-    padding: 16,
-    marginVertical: 8,
-    borderRadius: 8,
-    elevation: 2,
-  },
-  tileTitle: { fontSize: 18, fontWeight: 'bold' },
-  tileSubtitle: { fontSize: 14, color: '#555' },
-  noResultsText: { fontSize: 16, color: '#888', textAlign: 'center', marginTop: 20 },
-});

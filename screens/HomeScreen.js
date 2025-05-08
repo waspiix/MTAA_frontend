@@ -3,7 +3,9 @@ import { View, Text, TextInput, FlatList, TouchableOpacity, Alert, StyleSheet } 
 import { DateTimePickerAndroid } from "@react-native-community/datetimepicker";
 import config from "../config.json";
 import { useNavigation } from "@react-navigation/native";
-import Icon from "react-native-vector-icons/FontAwesome"; // Import FontAwesome icons
+import Icon from "react-native-vector-icons/FontAwesome";
+import { useTheme } from '../context/ThemeContext';
+import { getStyles } from "../styles";
 
 const HomeScreen = () => {
   const [fromQuery, setFromQuery] = useState("");
@@ -16,10 +18,13 @@ const HomeScreen = () => {
   const [time, setTime] = useState(new Date());
   const [debounceTimeout, setDebounceTimeout] = useState(null);
   const navigation = useNavigation();
+  const { isDarkMode } = useTheme();
+  const styles = getStyles(isDarkMode);
+  
 
   const searchStations = async (query, setStations) => {
     if (query.length < 3) {
-      setStations([]); // Clear results if query is too short
+      setStations([]);
       return;
     }
 
@@ -33,7 +38,7 @@ const HomeScreen = () => {
         body: JSON.stringify({ starts_with: query }),
       });
       const data = await response.json();
-      setStations(data.stations || data); // Update station list
+      setStations(data.stations || data);
     } catch (error) {
       console.error(error);
       Alert.alert("Error", "Failed to search stations");
@@ -41,25 +46,19 @@ const HomeScreen = () => {
   };
 
   const debounceSearch = useCallback((query, setStations) => {
-    if (debounceTimeout) {
-      clearTimeout(debounceTimeout); // Clear the previous timeout
-    }
+    if (debounceTimeout) clearTimeout(debounceTimeout);
 
     const timeout = setTimeout(() => {
-      searchStations(query, setStations); // Execute the search after the delay
-    }, 300); // 300ms debounce delay
-
-    setDebounceTimeout(timeout); // Save the new timeout
+      searchStations(query, setStations);
+    }, 300);
+    setDebounceTimeout(timeout);
   }, [debounceTimeout]);
-  
 
   const showDatePicker = () => {
     DateTimePickerAndroid.open({
       value: date,
       onChange: (event, selectedDate) => {
-        if (selectedDate) {
-          setDate(selectedDate);
-        }
+        if (selectedDate) setDate(selectedDate);
       },
       mode: "date",
       display: "default",
@@ -70,9 +69,7 @@ const HomeScreen = () => {
     DateTimePickerAndroid.open({
       value: time,
       onChange: (event, selectedTime) => {
-        if (selectedTime) {
-          setTime(selectedTime);
-        }
+        if (selectedTime) setTime(selectedTime);
       },
       mode: "time",
       display: "default",
@@ -102,8 +99,6 @@ const HomeScreen = () => {
       });
 
       const data = await response.json();
-      console.log("Trains found:", data.trains); // Debugging line to check the trains data
-
       if (response.ok && data.trains.length > 0) {
         navigation.navigate('Search Results', { trains: data.trains });
       } else {
@@ -119,11 +114,12 @@ const HomeScreen = () => {
     <View style={styles.container}>
       <Text style={styles.heading}>Zadajte</Text>
 
-      {/* From Station Search */}
+      {/* From Station */}
       <View style={styles.inputContainer}>
         <TextInput
           style={styles.input}
           placeholder="Odkiaľ"
+          placeholderTextColor={isDarkMode ? "#aaa" : "#999"}
           value={fromQuery}
           onChangeText={(query) => {
             setFromQuery(query);
@@ -141,10 +137,10 @@ const HomeScreen = () => {
                   onPress={() => {
                     setSelectedFrom(item);
                     setFromQuery(item.name);
-                    setFromStations([]); // Clear the list after selection
+                    setFromStations([]);
                   }}
                 >
-                  <Text>{item.name}</Text>
+                  <Text style={styles.resultText}>{item.name}</Text>
                 </TouchableOpacity>
               )}
             />
@@ -152,11 +148,12 @@ const HomeScreen = () => {
         )}
       </View>
 
-      {/* To Station Search */}
+      {/* To Station */}
       <View style={styles.inputContainer}>
         <TextInput
           style={styles.input}
           placeholder="Kam"
+          placeholderTextColor={isDarkMode ? "#aaa" : "#999"}
           value={toQuery}
           onChangeText={(query) => {
             setToQuery(query);
@@ -174,10 +171,10 @@ const HomeScreen = () => {
                   onPress={() => {
                     setSelectedTo(item);
                     setToQuery(item.name);
-                    setToStations([]); // Clear the list after selection
+                    setToStations([]);
                   }}
                 >
-                  <Text>{item.name}</Text>
+                  <Text style={styles.resultText}>{item.name}</Text>
                 </TouchableOpacity>
               )}
             />
@@ -185,20 +182,18 @@ const HomeScreen = () => {
         )}
       </View>
 
-      {/* Date Picker */}
       <TouchableOpacity style={styles.dateButton} onPress={showDatePicker}>
-  <Text style={styles.dateButtonText}>Vybrať dátum</Text>
-</TouchableOpacity>
-<Text style={styles.dateText}>Vybraný dátum: {date.toDateString()}</Text>
+        <Text style={styles.dateButtonText}>Vybrať dátum</Text>
+      </TouchableOpacity>
+      <Text style={styles.dateText}>Vybraný dátum: {date.toDateString()}</Text>
 
-{/* Time Picker */}
-<TouchableOpacity style={styles.dateButton} onPress={showTimePicker}>
-  <Text style={styles.dateButtonText}>Vybrať čas</Text>
-</TouchableOpacity>
+      <TouchableOpacity style={styles.dateButton} onPress={showTimePicker}>
+        <Text style={styles.dateButtonText}>Vybrať čas</Text>
+      </TouchableOpacity>
+      <Text style={styles.dateText}>
+        Vybraný čas: {time.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+      </Text>
 
-<Text style={styles.dateText}>Vybraný čas: {time.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</Text>
-
-      {/* Search Button */}
       <TouchableOpacity style={styles.searchButton} onPress={handleSearch}>
         <View style={styles.searchButtonContent}>
           <Icon name="train" size={20} color="#fff" style={styles.icon} />
@@ -209,87 +204,5 @@ const HomeScreen = () => {
   );
 };
 
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    padding: 20,
-    backgroundColor: "#785C47",
-  },
-  heading: {
-    fontSize: 24,
-    fontWeight: "bold",
-    color: "#ffffff",
-    textAlign: "center",
-    marginBottom: 20,
-  },
-  inputContainer: {
-    marginBottom: 20,
-    position: "relative",
-  },
-  input: {
-    width: "100%",
-    padding: 10,
-    borderWidth: 1,
-    borderColor: "#ccc",
-    borderRadius: 10,
-    backgroundColor: "#fff",
-  },
-  overlay: {
-    position: "absolute",
-    top: "100%",
-    left: 0,
-    right: 0,
-    backgroundColor: "#fff",
-    borderRadius: 8,
-    elevation: 5, // Shadow for Android
-    shadowColor: "#000", // Shadow for iOS
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.2,
-    shadowRadius: 4,
-    zIndex: 10,
-    maxHeight: 200, // Limit height for scrollable results
-  },
-  stationItem: {
-    padding: 10,
-    borderBottomWidth: 1,
-    borderBottomColor: "#ccc",
-  },
-  dateButton: {
-    padding: 15,
-    backgroundColor: "#1F5D6C",
-    borderRadius: 10,
-    alignItems: "center",
-    marginBottom: 10,
-  },
-  dateButtonText: {
-    color: "#fff",
-    fontSize: 16,
-    fontWeight: "bold",
-  },
-  dateText: {
-    fontSize: 16,
-    textAlign: "center",
-    marginBottom: 20,
-    color: "#ffffff",
-  },
-  searchButton: {
-    padding: 15,
-    backgroundColor: "#1F5D6C",
-    borderRadius: 10,
-    alignItems: "center",
-  },
-  searchButtonText: {
-    color: "#fff",
-    fontSize: 16,
-    fontWeight: "bold",
-  },
-  searchButtonContent: {
-  flexDirection: "row", // Align icon and text horizontally
-  alignItems: "center",
-},
-icon: {
-  marginRight: 10, // Add spacing between the icon and text
-},
-});
 
 export default HomeScreen;
