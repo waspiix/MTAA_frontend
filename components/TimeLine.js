@@ -6,20 +6,17 @@ const Timeline = ({ stations }) => {
     <View>
       {stations.map((item, index) => (
         <View key={item.id} style={styles.timelineItem}>
-          {/* Timeline Line */}
           <View style={styles.timeline}>
-            {index !== 0 && <View style={styles.line} />} {/* Line above */}
+            {index !== 0 && <View style={styles.line} />}
             <View
               style={[
                 styles.circle,
-                index === 0 && styles.startCircle, // Highlight start station
-                index === stations.length - 1 && styles.endCircle, // Highlight end station
+                index === 0 && styles.startCircle, 
+                index === stations.length - 1 && styles.endCircle, 
               ]}
             />
-            {index !== stations.length - 1 && <View style={styles.line} />} {/* Line below */}
+            {index !== stations.length - 1 && <View style={styles.line} />}
           </View>
-
-          {/* Station Info */}
           <View style={styles.stationInfo}>
             <Text style={styles.stationName}>{item.station_name}</Text>
             <Text style={styles.stationTime}>{item.departure_time}</Text>

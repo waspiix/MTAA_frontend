@@ -91,7 +91,7 @@ const AppNavigator = () => {
         <Drawer.Screen name="Tickets">
           {({ navigation, route }) => (
             <HeaderFooter navigation={navigation} route={route}>
-              <Tickets />
+              <TicketsStackNavigator/>
             </HeaderFooter>
           )}
         </Drawer.Screen>
@@ -107,7 +107,6 @@ const AppNavigator = () => {
         <Drawer.Screen name="Settings">
           {({ navigation, route }) => (
             <HeaderFooter navigation={navigation} route={route}>
-              <TicketsStackNavigator/>
               <Settings />
             </HeaderFooter>
           )}
