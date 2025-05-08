@@ -9,13 +9,16 @@ import {
   ImageBackground,
 } from "react-native";
 import QRCode from "react-native-qrcode-svg"; // Ensure this is installed
-import styles from "../styles"; // Import shared styles
+import { getStyles } from "../styles";
 import config from "../config.json"; // Import API URL from config
 import { useUser } from "../context/UserContext"; // Import useUser hook
+import { useTheme } from '../context/ThemeContext';
 
 const Tickets = ({ navigation }) => {
   const [tickets, setTickets] = useState([]);
   const [loading, setLoading] = useState(true);
+  const { isDarkMode } = useTheme();
+  const styles = getStyles(isDarkMode);
 
   const { user } = useUser(); // Access the user context to get the token and user info
   const token = user.token; // Assuming you have a token in your user context
