@@ -1,7 +1,10 @@
-import React from 'react';
+import React, { useEffect } from 'react';
 import { NavigationContainer } from '@react-navigation/native';
 import { createDrawerNavigator } from '@react-navigation/drawer';
 import { createStackNavigator } from '@react-navigation/stack';
+import * as Notifications from 'expo-notifications';
+import Constants from 'expo-constants';
+import { Platform, Alert } from 'react-native';
 import { UserProvider, useUser } from './context/UserContext';
 
 // screen imports
@@ -14,11 +17,61 @@ import CreateTrainScreen from './screens/CreateTrainScreen';
 import SearchResultsScreen from './screens/SearchResultsScreen';
 import BuyTicketScreen from './screens/BuyTicketScreen';
 import PaymentScreen from './screens/PaymentWallScreen';
+import UpdateTrainScreen from './screens/UpdateTrainScreen';
+import NotificationsScreen from './screens/NotificationsScreen';
 
 import TicketInfo from './screens/TicketInfo';
 import Settings from './screens/SettingsScreen';
 import { ThemeProvider } from './context/ThemeContext';
+import { NotificationsProvider } from './context/NotificationsContext';
 
+// Function to register for push notifications
+async function registerForPushNotificationsAsync(userToken) {
+  let token;
+
+  if (Platform.OS === 'android') {
+    await Notifications.setNotificationChannelAsync('default', {
+      name: 'default',
+      importance: Notifications.AndroidImportance.MAX,
+    });
+  }
+
+  const { status: existingStatus } = await Notifications.getPermissionsAsync();
+  let finalStatus = existingStatus;
+
+  if (existingStatus !== 'granted') {
+    const { status } = await Notifications.requestPermissionsAsync();
+    finalStatus = status;
+  }
+
+  if (finalStatus !== 'granted') {
+    Alert.alert('Push notifikácie neboli povolené!');
+    return;
+  }
+
+  token = (await Notifications.getExpoPushTokenAsync({
+    projectId: Constants.expoConfig.extra.eas.projectId,
+  })).data;
+
+  if (token) {
+    // Uložte token do UserContext
+    useUser((prevUser) => ({ ...prevUser, expo_token: token }));
+
+    // Ak je token a používateľský token, pošlite ho na backend
+    if (userToken) {
+      fetch('https://192.168.0.107:8002/api/store-token', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${userToken}`,
+        },
+        body: JSON.stringify({ expo_token: token }),
+      }).catch((error) => console.error('Error storing token:', error));
+    }
+  }
+
+  return token;
+}
 
 const Drawer = createDrawerNavigator();
 const Stack = createStackNavigator();
@@ -46,6 +99,10 @@ const TrainStackNavigator = () => (
       component={PaymentScreen}
       options={{ headerShown: false }}
     />
+    <Stack.Screen name="UpdateTrainScreen"
+     component={UpdateTrainScreen} 
+     options={{ headerShown: false }}
+     />
   </Stack.Navigator>
 );
 
@@ -61,11 +118,21 @@ const TicketsStackNavigator = () => (
       component={TicketInfo}
       options={{ headerShown: false }} // Hide header for the main screen
     />
-    </Stack.Navigator>
+  </Stack.Navigator>
 );
 
 const AppNavigator = () => {
   const { user } = useUser(); // Get the user role from context
+
+  // Register push notification token when app starts
+  useEffect(() => {
+    if (user.token) {
+      registerForPushNotificationsAsync(user.token).then((token) => {
+        // Handle any additional logic if needed after registering
+        console.log('Push notification token:', token);
+      });
+    }
+  }, [user.token]); // Runs only when `user.token` changes
 
   return (
     <NavigationContainer>
@@ -77,21 +144,19 @@ const AppNavigator = () => {
           headerTintColor: '#fff',
         }}>
 
-
-
         {/* Use TrainStackNavigator for train-related screens */}
         <Drawer.Screen name="Vyhľadanie spojenia">
-        {({ navigation, route }) => (
-        <HeaderFooter navigation={navigation} route={route}>
-           <TrainStackNavigator />
-        </HeaderFooter>
-        )}
+          {({ navigation, route }) => (
+            <HeaderFooter navigation={navigation} route={route}>
+               <TrainStackNavigator />
+            </HeaderFooter>
+          )}
         </Drawer.Screen>
 
         <Drawer.Screen name="Tickets">
           {({ navigation, route }) => (
             <HeaderFooter navigation={navigation} route={route}>
-              <TicketsStackNavigator/>
+              <TicketsStackNavigator />
             </HeaderFooter>
           )}
         </Drawer.Screen>
@@ -112,7 +177,13 @@ const AppNavigator = () => {
           )}
         </Drawer.Screen>
 
-        
+        <Drawer.Screen name="Notifications">
+          {({ navigation, route }) => (
+            <HeaderFooter navigation={navigation} route={route}>
+              <NotificationsScreen />
+            </HeaderFooter>
+          )}
+        </Drawer.Screen>
 
         {/* Conditionally render admin-only screens */}
         {user.privilege === 2 && (
@@ -138,7 +209,9 @@ const AppNavigator = () => {
 const App = () => (
   <UserProvider>
     <ThemeProvider>
-      <AppNavigator />
+      <NotificationsProvider>
+        <AppNavigator />
+      </NotificationsProvider>
     </ThemeProvider>
   </UserProvider>
 );

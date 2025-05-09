@@ -56,7 +56,7 @@ export const getStyles = (isDarkMode) =>
       paddingVertical: 5,
     },
     inputContainer: {
-      marginBottom: 20,
+      marginBottom: 10,
       position: "relative",
     },
     reserveButton: {
@@ -195,7 +195,7 @@ export const getStyles = (isDarkMode) =>
       backgroundColor: isDarkMode ? "#1e1e1e" : "#fff",
       borderWidth: 1,
       borderColor: isDarkMode ? "#333" : "#ddd",
-      marginBottom: 10,
+      marginBottom: 15,
     },
     info: {
       fontSize: 16,

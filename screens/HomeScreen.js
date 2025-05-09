@@ -1,11 +1,12 @@
 import React, { useState, useCallback } from "react";
-import { View, Text, TextInput, FlatList, TouchableOpacity, Alert, StyleSheet } from "react-native";
+import { View, Text, TextInput, FlatList, TouchableOpacity, Alert, Switch } from "react-native";
 import { DateTimePickerAndroid } from "@react-native-community/datetimepicker";
 import config from "../config.json";
 import { useNavigation } from "@react-navigation/native";
 import Icon from "react-native-vector-icons/FontAwesome";
 import { useTheme } from '../context/ThemeContext';
 import { getStyles } from "../styles";
+import { useUser } from '../context/UserContext';
 
 const HomeScreen = () => {
   const [fromQuery, setFromQuery] = useState("");
@@ -20,7 +21,8 @@ const HomeScreen = () => {
   const navigation = useNavigation();
   const { isDarkMode } = useTheme();
   const styles = getStyles(isDarkMode);
-  
+  const { user } = useUser();
+  const [isNewsChecked, setIsNewsChecked] = useState(false);
 
   const searchStations = async (query, setStations) => {
     if (query.length < 3) {
@@ -110,7 +112,8 @@ const HomeScreen = () => {
             from_station: selectedFrom.id,
             to_station: selectedTo.id,
             departure_time: departureTime
-          }
+          },
+          isNewsChecked: isNewsChecked,
         });
       } else {
         Alert.alert("No Results", "No trains found for the selected criteria.");
@@ -124,6 +127,16 @@ const HomeScreen = () => {
   return (
     <View style={styles.container}>
       <Text style={styles.heading}>Zadajte</Text>
+
+      {user.privilege === 2 && (
+          <View style={ styles.row}>
+            <Text style={{ marginLeft: 10, color: isDarkMode ? "#fff" : "#000" }}>ADMIN - Zadaj aktualitu spoju</Text>
+            <Switch
+              value={isNewsChecked}
+              onValueChange={setIsNewsChecked}
+            />
+          </View>
+      )}
 
       {/* From Station */}
       <View style={styles.inputContainer}>

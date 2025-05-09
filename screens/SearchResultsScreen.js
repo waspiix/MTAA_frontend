@@ -4,8 +4,11 @@ import { useTheme } from '../context/ThemeContext';
 import { getStyles } from "../styles";
 import config from "../config.json";
 import Icon from 'react-native-vector-icons/FontAwesome';
+import { Ionicons } from '@expo/vector-icons';
+import { useUser } from '../context/UserContext';
 
 const { width } = Dimensions.get('window');
+
 
 const SearchResultsScreen = ({ route, navigation }) => {
   const { trains: initialTrains, pagination: initialPagination, searchParams } = route.params;
@@ -14,6 +17,8 @@ const SearchResultsScreen = ({ route, navigation }) => {
   const [loading, setLoading] = useState(false);
   const { isDarkMode } = useTheme();
   const styles = getStyles(isDarkMode);
+  const { isNewsChecked = false } = route.params;
+  const { user } = useUser();
 
   const fetchMoreTrains = async () => {
     // If already loading or on the last page, don't fetch
@@ -74,7 +79,14 @@ const SearchResultsScreen = ({ route, navigation }) => {
     return (
       <TouchableOpacity 
         style={[tileStyles.trainTile, isDarkMode ? tileStyles.darkTile : tileStyles.lightTile]}
-        onPress={() => navigation.navigate('BuyTicket', { train: item })}
+        // pri stlaceni ak admin edituje tak ho to presmeruje na UpdateTrainScreen inak na BuyTicket
+        onPress={() => {
+          if (user?.privilege === 2 && isNewsChecked) {
+            navigation.navigate('UpdateTrainScreen', { train: item });
+          } else {
+            navigation.navigate('BuyTicket', { train: item });
+          }
+        }}
       >
         <View style={tileStyles.trainHeader}>
           <Text style={[tileStyles.trainName, isDarkMode && tileStyles.darkText]}>{item.name}</Text>
@@ -117,7 +129,12 @@ const SearchResultsScreen = ({ route, navigation }) => {
 
   return (
     <View style={[styles.container, { padding: 12 }]}>
-      <Text style={styles.heading}>Search Results</Text>
+      <View style={{ flexDirection: 'row' }}>
+        <TouchableOpacity onPress={() => navigation.goBack()} >
+          <Ionicons name="arrow-back" size={24} color={isDarkMode ? "#fff" : "#000"} />
+        </TouchableOpacity>
+        <Text style={[styles.heading, { flex: 1, textAlign: 'center', marginBottom: 12 }]}>Nájdené spojenia</Text>
+      </View>
       
       <FlatList
         data={trains}
