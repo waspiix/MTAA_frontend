@@ -56,18 +56,32 @@ const SearchResultsScreen = ({ route, navigation }) => {
     const firstStation = item.routes[0];
     const lastStation = item.routes[item.routes.length - 1];
     
+    // Parse ISO date strings correctly
+    const parseDateTime = (dateTimeString) => {
+      // Replace space with 'T' and ensure proper timezone format for ISO 8601
+      const formattedDateTime = dateTimeString.replace(' ', 'T').replace(/\+(\d{2})$/, '+$1:00');
+      return new Date(formattedDateTime);
+    };
+    
     // Format times for display
-    const departureTime = new Date(firstStation.departure_time).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'});
-    const arrivalTime = new Date(lastStation.departure_time).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'});
-    console.log(departureTime)
+    const departureDate = parseDateTime(firstStation.departure_time);
+    const departureTime = departureDate.toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'});
+    const arrivalTime = parseDateTime(lastStation.departure_time).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'});
+    
+    // Format date for display (e.g., "May 10, 2025")
+    const formattedDate = departureDate.toLocaleDateString([], {month: 'short', day: 'numeric', year: 'numeric'});
+    
     return (
       <TouchableOpacity 
         style={[tileStyles.trainTile, isDarkMode ? tileStyles.darkTile : tileStyles.lightTile]}
-        onPress={() => navigation.navigate('Train Detail', { train: item })}
+        onPress={() => navigation.navigate('BuyTicket', { train: item })}
       >
         <View style={tileStyles.trainHeader}>
           <Text style={[tileStyles.trainName, isDarkMode && tileStyles.darkText]}>{item.name}</Text>
-          <Icon name="train" size={18} color={isDarkMode ? "#8eccff" : "#3377cc"} />
+          <View style={tileStyles.dateContainer}>
+            <Text style={[tileStyles.dateText, isDarkMode && tileStyles.darkSecondaryText]}>{formattedDate}</Text>
+            <Icon name="train" size={18} color={isDarkMode ? "#8eccff" : "#3377cc"} />
+          </View>
         </View>
         
         <View style={tileStyles.routeContainer}>
@@ -157,6 +171,15 @@ const tileStyles = StyleSheet.create({
   },
   darkSecondaryText: {
     color: '#bbb',
+  },
+  dateContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
+  dateText: {
+    fontSize: 12,
+    color: '#666',
+    marginRight: 6,
   },
   routeContainer: {
     flexDirection: 'row',

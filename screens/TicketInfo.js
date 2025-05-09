@@ -7,6 +7,7 @@ import {
   Dimensions,
   Alert,
   Animated,
+  ScrollView
 } from "react-native";
 import QRCode from "react-native-qrcode-svg";
 import MapView, { Polyline, Marker } from "react-native-maps";
@@ -18,7 +19,7 @@ const TicketInfo = ({ route }) => {
 
   const stations = ticket.train.routes;
   const train = ticket.train;
-
+  console.log("Ticket Info:", ticket);
   const coordinates = stations.map((station) => ({
     latitude: station.latitude,
     longitude: station.longitude,
@@ -52,6 +53,7 @@ const TicketInfo = ({ route }) => {
   }, []);
 
   return (
+    <ScrollView style={{ flex: 1 }} contentContainerStyle={{ flexGrow: 1 }}>
     <View style={styles.container}>
       {/* Map */}
 
@@ -106,6 +108,8 @@ const TicketInfo = ({ route }) => {
         )}
       </MapView>
     </View>
+
+    </ScrollView>
   );
 };
 
