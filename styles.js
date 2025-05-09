@@ -59,13 +59,39 @@ export const getStyles = (isDarkMode) =>
       marginBottom: 20,
       position: "relative",
     },
+    reserveButton: {
+      backgroundColor: '#0066cc',
+      padding: 10,
+      borderRadius: 6,
+      marginVertical: 16,
+      alignItems: 'center',
+    },
+    reserveButtonText: {
+      color: '#fff',
+      fontWeight: 'bold',
+    },
+    modalOverlay: {
+      flex: 1,
+      justifyContent: 'center',
+      backgroundColor: 'rgba(0,0,0,0.5)',
+      padding: 20,
+    },
+    modalContent: {
+      backgroundColor: 'white',
+      borderRadius: 8,
+      padding: 20,
+    },
+    modalTitle: {
+      fontSize: 18,
+      fontWeight: 'bold',
+      marginBottom: 12,
+    },
     input: {
       height: 50,
       paddingHorizontal: 15,
       borderWidth: 1,
       borderRadius: 10,
       fontSize: 16,
-      backgroundColor: isDarkMode ? "#1e1e1e" : "#fff",
       color: isDarkMode ? "#fff" : "#000",
       borderColor: isDarkMode ? "#444" : "#ccc",
       marginBottom: 15,
@@ -206,5 +232,11 @@ export const getStyles = (isDarkMode) =>
       borderRadius: 50,
       alignSelf: "center",
       marginBottom: 20,
+    },
+    smallProfileImage: {
+      width: 25,
+      height: 25,
+      borderRadius: 50,
+      alignSelf: "center",
     },
   });

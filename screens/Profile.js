@@ -119,17 +119,20 @@ const Profile = () => {
           email: editData.email,
           password: editData.password || undefined,
           password_confirmation: editData.passwordConfirmation || undefined,
+          card_id: editData.discountCard || undefined, // pridaj kartu
         }),
       });
-
+  
       const data = await response.json();
-
+  
       if (response.ok) {
         setUser({
           ...user,
           firstname: data.user.first_name,
           lastname: data.user.last_name,
           email: data.user.email,
+          card_id: data.user.card_id || null,
+          discount: data.user.discount?.name || null, // backend musí vrátiť discount.name
         });
         setEditMode(false);
         Alert.alert("Úspech", data.message || "Profil bol aktualizovaný.");
@@ -159,7 +162,6 @@ const Profile = () => {
     }
   };
 
-  // ➤ Užívateľ je prihlásený – zobrazíme profil
   if (user.token) {
     return (
       <View style={styles.container}>
@@ -234,8 +236,8 @@ const Profile = () => {
       <Text style={styles.info}> <Text style={styles.label}>Meno:</Text> {user.firstname}</Text>
       <Text style={styles.info}> <Text style={styles.label}>Priezvisko:</Text> {user.lastname}</Text>
       <Text style={styles.info}> <Text style={styles.label}>Email:</Text> {user.email}</Text>
-      <Text style={styles.info}> <Text style={styles.label}>Zľavová karta:</Text> {user.discountCard || "–"}</Text>
-      <Text style={styles.info}> <Text style={styles.label}>Typ zľavy:</Text> (zatiaľ nepriradené)</Text>
+      <Text style={styles.info}> <Text style={styles.label}>Zľavová karta:</Text> {user.card_id || "–"}</Text>
+      <Text style={styles.info}> <Text style={styles.label}>Typ zľavy:</Text> {user.discount ? user.discount : "–"}</Text>
       <Text style={styles.info}> <Text style={styles.label}>Práva:</Text> {user.privilege === 1 ? "Používateľ" : "Admin"}</Text>
 
       <TouchableOpacity style={styles.button} onPress={() => setEditMode(true)}>

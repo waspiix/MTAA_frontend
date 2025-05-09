@@ -1,35 +1,70 @@
 import React from 'react';
-import { View, Text, Button, StyleSheet, Alert, TouchableOpacity } from 'react-native';
+import { View, Text, Alert, TouchableOpacity, ScrollView, Image, Modal, Button, TextInput } from 'react-native';
 import config from '../config.json';
-import { useNavigation } from '@react-navigation/native';
-import { useUser } from '../context/UserContext'; // Import useUser hook
-import { useTheme } from '../context/ThemeContext';
-import { getStyles } from "../styles";
 import { Ionicons } from '@expo/vector-icons';
-
+import { useUser } from '../context/UserContext';
+import { useTheme } from '../context/ThemeContext';
+import { getStyles } from '../styles';
+import { useState } from 'react';
+import { Picker } from '@react-native-picker/picker';
 
 export default function BuyTicketScreen({ route, navigation }) {
   const { train } = route.params;
-  const { user } = useUser(); // Access the user context to get the token and user info
+  const { user } = useUser();
   const { isDarkMode } = useTheme();
   const styles = getStyles(isDarkMode);
 
-  // When user clicks "Buy Ticket"
+  // sluzi pre rezervaciu miesta
+  const [modalVisible, setModalVisible] = useState(false);
+  const [coach, setCoach] = useState('');
+  const [seat, setSeat] = useState('');
+  const [reservationText, setReservationText] = useState('');
+  const [travelClass, setTravelClass] = useState('2');
+
+  const trainImages = {
+    'Express Train': require('../assets/trains/express_train.jpg'),
+  };
+  const trainImageSource = trainImages[train.name] || require('../assets/trains/default.jpg');
+
+  const fromRoute = train.routes[0];
+  const toRoute = train.routes[train.routes.length - 1];
+
+  const formatTime = (time) => {
+    const sanitizedTime = time.replace(/(\+\d{2}:\d{2}|\+\d{2})$/, '');
+    const date = new Date(sanitizedTime);
+    return `${date.getFullYear()}-${(date.getMonth() + 1)
+      .toString()
+      .padStart(2, '0')}-${date.getDate().toString().padStart(2, '0')} ${date
+      .getHours()
+      .toString()
+      .padStart(2, '0')}:${date.getMinutes().toString().padStart(2, '0')}`;
+  };
+
+  const calculateTimeFromNow = (time) => {
+    const sanitizedTime = time.replace(/(\+\d{2}:\d{2}|\+\d{2})$/, '');
+    const now = new Date();
+    const departureTime = new Date(sanitizedTime);
+    const diffInMinutes = Math.round((departureTime - now) / (1000 * 60));
+
+    if (diffInMinutes < 0) return 'Departed';
+    if (diffInMinutes === 0) return 'Departing now';
+    return `${diffInMinutes} minutes from now`;
+  };
+
   const startPayment = async () => {
     try {
-
       const response = await fetch(`${config.API_URL}/payment/start`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
           Accept: 'application/json',
-          Authorization: `Bearer ${user.token}`, // Include the token for authentication
+          Authorization: `Bearer ${user.token}`,
         },
         body: JSON.stringify({
-          user_id: user.id, // User ID from context
-          train_id: train.id, // Train ID from route params
-          start_station: train.routes[0].station_name, // Start station
-          end_station: train.routes[train.routes.length - 1].station_name, // End station
+          user_id: user.id,
+          train_id: train.id,
+          start_station: fromRoute.station_name,
+          end_station: toRoute.station_name,
         }),
       });
 
@@ -47,22 +82,156 @@ export default function BuyTicketScreen({ route, navigation }) {
     }
   };
 
-
   return (
-  <View style={styles.container}>
-    <TouchableOpacity onPress={() => navigation.goBack()} style={styles.backButton}>
-      <Ionicons name="arrow-back" size={24} color={isDarkMode ? "#fff" : "#000"} />
-    </TouchableOpacity>
+    <ScrollView style={{ flex: 1, backgroundColor: isDarkMode ? '#000' : '#F2F2F2' }} contentContainerStyle={{ padding: 20 ,paddingBottom: 100 }}>
+      <TouchableOpacity onPress={() => navigation.goBack()} style={styles.backButton}>
+        <Ionicons name="arrow-back" size={24} color={isDarkMode ? '#fff' : '#000'} />
+      </TouchableOpacity>
 
-    <Text style={styles.title}>Buy Ticket for {train.name}</Text>
+      <View style={styles.tile}>
+        <Text style={styles.tileTitle}>{train.name}</Text>
+        <Text style={styles.tileSubtitle}>
+          From: {fromRoute.station_name} at {formatTime(fromRoute.departure_time)}
+        </Text>
+        <Text style={styles.tileSubtitle}>
+          To: {toRoute.station_name} at {formatTime(toRoute.departure_time)}
+        </Text>
+        <Text style={styles.tileSubtitle}>
+          Time from now: {calculateTimeFromNow(fromRoute.departure_time)}
+        </Text>
+        <Text style={styles.tileSubtitle}>
+          Počet zľavnených lístkov: {train.discounted_tickets}
+        </Text>
+      </View>
+      
+      {trainImageSource && (
+        <Image
+        source={trainImageSource}
+        style={{ width: '100%', height: 150, resizeMode: 'cover', borderRadius: 8, marginVertical: 16 }}
+        />
+      )}
 
-    <Text style={styles.subtitle}>From: {train.routes[0].station_name}</Text>
-    <Text style={styles.subtitle}>To: {train.routes[train.routes.length - 1].station_name}</Text>
-    <Text style={styles.subtitle}>Departure: {train.routes[0].departure_time}</Text>
-    <Text style={styles.subtitle}>Arrival: {train.routes[train.routes.length - 1].departure_time}</Text>
+      <View style={styles.tile}>
+        <View style={{ flexDirection: 'row', alignItems: 'center' }}>
+          <Image
+            source={require("../assets/profile_icon.png")}
+            style={styles.smallProfileImage}
+          />
+          <View style={{ marginLeft: 10 }}>
+            <Text style={styles.tileSubtitle}>
+              Meno: {user.firstname} {user.lastname}
+            </Text>
+            <Text style={styles.tileSubtitle}>
+              Zľava: {user.discount ? user.discount : 'Žiadna zľava'}
+            </Text>
+          </View>
+        </View>
+      </View>
 
-    <Button title="Confirm Purchase" onPress={startPayment} />
-  </View>
+      <TouchableOpacity style={styles.reserveButton} onPress={() => setModalVisible(true)}>
+        <Text style={styles.reserveButtonText}>Miestenka</Text>
+      </TouchableOpacity>
+
+      <Modal
+        animationType="slide"
+        transparent={true}
+        visible={modalVisible}
+        onRequestClose={() => setModalVisible(false)}
+      >
+        <View style={styles.modalOverlay}>
+          <View style={styles.modalContent}>
+            <Text style={styles.modalTitle}>Zadajte približnú rezerváciu</Text>
+            
+            <TextInput
+              placeholder="Číslo vozňa (1-9)"
+              value={coach}
+              onChangeText={(text) => {
+                const num = parseInt(text);
+                if (!isNaN(num) && num >= 1 && num <= 9) {
+                  setCoach(num.toString());
+                } else if (text === '') {
+                  setCoach('');
+                }
+              }}
+              keyboardType="numeric"
+              style={styles.input}
+            />
+            <TextInput
+              placeholder="Číslo miesta (1-50)"
+              value={seat}
+              onChangeText={(text) => {
+                const num = parseInt(text);
+                if (!isNaN(num) && num >= 1 && num <= 50) {
+                  setSeat(num.toString());
+                } else if (text === '') {
+                  setSeat('');
+                }
+              }}
+              keyboardType="numeric"
+              style={styles.input}
+            />
+
+            {/* Trieda - Dropdown */}
+            <View style={{ marginVertical: 10 }}>
+              <Text style={{ marginBottom: 4 }}>Trieda:</Text>
+              <View style={{
+                borderWidth: 1,
+                borderColor: '#ccc',
+                borderRadius: 4,
+                overflow: 'hidden',
+              }}>
+                <Picker
+                  selectedValue={travelClass}
+                  onValueChange={(itemValue) => setTravelClass(itemValue)}
+                  mode="dropdown"
+                >
+                  <Picker.Item label="Vyber triedu" value="" />
+                  <Picker.Item label="1. trieda" value="1" />
+                  <Picker.Item label="2. trieda" value="2" />
+                </Picker>
+              </View>
+            </View>
+
+            <Button
+              title="Potvrdiť"
+              onPress={() => {
+                if (coach && seat && travelClass) {
+                  setReservationText(`Vozeň: ${coach}, Miesto: ${seat}, Trieda: ${travelClass}`);
+                  setModalVisible(false);
+                } else {
+                  Alert.alert('Chyba', 'Zadajte všetky údaje.');
+                }
+              }}
+            />
+
+            <View style={{ marginVertical: 10 }}>
+              <Button title="Naspäť" color="gray" onPress={() => setModalVisible(false)} />
+            </View>
+          
+            <TouchableOpacity onPress={() => {
+              setReservationText('');
+              setCoach('');
+              setSeat('');
+              setTravelClass('1');
+              setModalVisible(false);
+            }}>
+              <Text style={{ color: 'red', textAlign: 'center', marginTop: 10 }}>Zrušiť rezerváciu</Text>
+            </TouchableOpacity>
+          
+          
+          </View>
+        </View>
+      </Modal>
+
+      {reservationText !== '' && (
+        <Text style={[styles.tileSubtitle, { textAlign: 'center', marginBottom: 10 }]}>
+          {reservationText}
+        </Text>
+      )}
+
+      <TouchableOpacity onPress={startPayment} style={styles.button}>
+        <Text style={styles.buttonText}>Potvrdiť objednávku</Text>
+      </TouchableOpacity>
+    </ScrollView>
   );
 }
-
