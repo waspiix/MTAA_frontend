@@ -8,23 +8,58 @@ import {
   StyleSheet,
   ImageBackground,
 } from "react-native";
-import QRCode from "react-native-qrcode-svg"; // Ensure this is installed
+import QRCode from "react-native-qrcode-svg";
+import AsyncStorage from '@react-native-async-storage/async-storage';
 import { getStyles } from "../styles";
-import config from "../config.json"; // Import API URL from config
-import { useUser } from "../context/UserContext"; // Import useUser hook
+import config from "../config.json";
+import { useUser } from "../context/UserContext";
 import { useTheme } from '../context/ThemeContext';
+
+const TICKETS_STORAGE_KEY = 'user_tickets';
+const LAST_SYNC_KEY = 'tickets_last_sync';
 
 const Tickets = ({ navigation }) => {
   const [tickets, setTickets] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [isOfflineData, setIsOfflineData] = useState(false);
+  const [lastSynced, setLastSynced] = useState(null);
   const { isDarkMode } = useTheme();
   const styles = getStyles(isDarkMode);
 
-  const { user } = useUser(); // Access the user context to get the token and user info
-  const token = user.token; // Assuming you have a token in your user context
+  const { user } = useUser();
+  const token = user.token;
+
+  // Save tickets to AsyncStorage
+  const saveTicketsLocally = async (ticketsData) => {
+    try {
+      await AsyncStorage.setItem(TICKETS_STORAGE_KEY, JSON.stringify(ticketsData));
+      const now = new Date().toISOString();
+      await AsyncStorage.setItem(LAST_SYNC_KEY, now);
+      setLastSynced(now);
+    } catch (error) {
+      console.error("Error saving tickets locally:", error);
+    }
+  };
+
+  // Load tickets from AsyncStorage
+  const loadLocalTickets = async () => {
+    try {
+      const storedTickets = await AsyncStorage.getItem(TICKETS_STORAGE_KEY);
+      const lastSync = await AsyncStorage.getItem(LAST_SYNC_KEY);
+      
+      if (storedTickets) {
+        setTickets(JSON.parse(storedTickets));
+        setLastSynced(lastSync);
+        setIsOfflineData(true);
+      }
+    } catch (error) {
+      console.error("Error loading local tickets:", error);
+    }
+  };
 
   // Fetch tickets from the API
-  const fetchTickets = async () => {
+  const fetchTickets = async (useOfflineIfFailed = true) => {
+    setLoading(true);
     try {
       const response = await fetch(`${config.API_URL}/tickets`, {
         method: "GET",
@@ -35,87 +70,155 @@ const Tickets = ({ navigation }) => {
         },
       });
       
-
       if (!response.ok) {
         throw new Error("Failed to fetch tickets");
       }
 
       const data = await response.json();
-      setTickets(data.tickets || []); // Assuming the API returns a `tickets` array
+      const ticketsData = data.tickets || [];
+      setTickets(ticketsData);
+      setIsOfflineData(false);
+      
+      // Save the fresh data locally
+      saveTicketsLocally(ticketsData);
     } catch (error) {
       console.error(error);
-      Alert.alert("Error", "Could not fetch tickets. Please try again later.");
+      
+      if (useOfflineIfFailed) {
+        // If online fetch fails, try to load local data
+        await loadLocalTickets();
+        if (!isOfflineData) {
+          // do nothing 
+           
+        }
+      } else {
+        Alert.alert("Error", "Could not fetch tickets. Please try again later.");
+      }
     } finally {
       setLoading(false);
     }
   };
 
   useEffect(() => {
-    fetchTickets();
+    // First try to load local data to show something immediately
+    loadLocalTickets().then(() => {
+      // Then try to fetch fresh data from API
+      fetchTickets();
+    });
   }, []);
+
+  const handleRefresh = () => {
+    fetchTickets(false); // Don't fall back to offline data on manual refresh
+  };
 
   const handleTicketPress = (ticket) => {
     navigation.navigate("TicketInfo", { ticket });
+  };
+
+  const formatSyncTime = (isoString) => {
+    if (!isoString) return "Never";
+    const date = new Date(isoString);
+    return date.toLocaleString();
   };
 
   return (
     <View style={styles.container}>
       {loading ? (
         <Text style={localStyles.loadingText}>Loading tickets...</Text>
-      ) : tickets.length > 0 ? (
-        <FlatList
-          data={tickets}
-          keyExtractor={(item) => item.id.toString()}
-          renderItem={({ item }) => (
-            <TouchableOpacity
-              style={localStyles.ticketContainer}
-              onPress={() => handleTicketPress(item)}
-            >
-              <ImageBackground
-                source={require("../assets/deco.png")} // Add your ticket background image here
-                style={localStyles.ticketBackground}
-                imageStyle={{ borderRadius: 16, resizeMode: "stretch" }}
-              >
-                <View style={localStyles.overlay}>
-                  <Text style={localStyles.ticketTitle}>{item.train.name}</Text>
-                  <View style={localStyles.routeRow}>
-                    <Text style={localStyles.station}>{item.start_station.name}</Text>
-                    <Text style={localStyles.arrow}>→</Text>
-                    <Text style={localStyles.station}>{item.end_station.name}</Text>
-                  </View>
-
-                  <View style={localStyles.timeRow}>
-                    <View>
-                      <Text style={localStyles.label}>Odchod:</Text>
-                      <Text style={localStyles.value}>{item.arrival_time_at}</Text>
-                    </View>
-                    <View>
-                      <Text style={localStyles.label}>Príchod:</Text>
-                      <Text style={localStyles.value}>{item.departure_time_at}</Text>
-                    </View>
-                  </View>
-
-                  <View style={localStyles.qrContainer}>
-                    <QRCode
-                      value={`ticket-${item.id}`}
-                      size={80}
-                      backgroundColor="white"
-                    />
-                    
-                  </View>
-                </View>
-              </ImageBackground>
-            </TouchableOpacity>
-          )}
-        />
       ) : (
-        <Text style={localStyles.noTicketsText}>No tickets found</Text>
+        <>
+          {isOfflineData && (
+            <View style={localStyles.offlineBanner}>
+              <Text style={localStyles.offlineText}>
+                Offline Mode • Last synced: {formatSyncTime(lastSynced)}
+              </Text>
+              <TouchableOpacity 
+                style={localStyles.refreshButton}
+                onPress={handleRefresh}
+              >
+                <Text style={localStyles.refreshButtonText}>Refresh</Text>
+              </TouchableOpacity>
+            </View>
+          )}
+          
+          {tickets.length > 0 ? (
+            <FlatList
+              data={tickets}
+              keyExtractor={(item) => item.id.toString()}
+              renderItem={({ item }) => (
+                <TouchableOpacity
+                  style={localStyles.ticketContainer}
+                  onPress={() => handleTicketPress(item)}
+                >
+                  <ImageBackground
+                    source={require("../assets/deco.png")}
+                    style={localStyles.ticketBackground}
+                    imageStyle={{ borderRadius: 16, resizeMode: "stretch" }}
+                  >
+                    <View style={localStyles.overlay}>
+                      <Text style={localStyles.ticketTitle}>{item.train.name}</Text>
+                      <View style={localStyles.routeRow}>
+                        <Text style={localStyles.station}>{item.start_station.name}</Text>
+                        <Text style={localStyles.arrow}>→</Text>
+                        <Text style={localStyles.station}>{item.end_station.name}</Text>
+                      </View>
+
+                      <View style={localStyles.timeRow}>
+                        <View>
+                          <Text style={localStyles.label}>Odchod:</Text>
+                          <Text style={localStyles.value}>{item.arrival_time_at}</Text>
+                        </View>
+                        <View>
+                          <Text style={localStyles.label}>Príchod:</Text>
+                          <Text style={localStyles.value}>{item.departure_time_at}</Text>
+                        </View>
+                      </View>
+
+                      <View style={localStyles.qrContainer}>
+                        <QRCode
+                          value={`ticket-${item.id}`}
+                          size={80}
+                          backgroundColor="white"
+                        />
+                      </View>
+                    </View>
+                  </ImageBackground>
+                </TouchableOpacity>
+              )}
+              refreshing={loading}
+              onRefresh={handleRefresh}
+            />
+          ) : (
+            <Text style={localStyles.noTicketsText}>No tickets found</Text>
+          )}
+        </>
       )}
     </View>
   );
 };
 
 const localStyles = StyleSheet.create({
+  offlineBanner: {
+    backgroundColor: '#f8d7da',
+    padding: 10,
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+  },
+  offlineText: {
+    color: '#721c24',
+    fontSize: 12,
+    flex: 1,
+  },
+  refreshButton: {
+    backgroundColor: '#721c24',
+    padding: 6,
+    borderRadius: 4,
+  },
+  refreshButtonText: {
+    color: 'white',
+    fontSize: 12,
+  },
   loadingText: {
     fontSize: 16,
     textAlign: "center",
@@ -135,7 +238,6 @@ const localStyles = StyleSheet.create({
     overflow: "hidden",
     elevation: 4,
     backgroundColor: "#fff",
-    
   },
   ticketBackground: {
     padding: 20,
