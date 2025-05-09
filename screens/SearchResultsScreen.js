@@ -1,85 +1,193 @@
-import React from 'react';
-import { View, Text, FlatList, TouchableOpacity } from 'react-native';
-import { Ionicons } from '@expo/vector-icons';
+import React, { useState } from 'react';
+import { View, Text, FlatList, ActivityIndicator, TouchableOpacity, StyleSheet, Dimensions } from 'react-native';
 import { useTheme } from '../context/ThemeContext';
 import { getStyles } from "../styles";
+import config from "../config.json";
+import Icon from 'react-native-vector-icons/FontAwesome';
 
-export default function SearchResultsScreen({ route, navigation }) {
-  const { trains } = route.params;
-  const { isDarkMode } = useTheme();  
+const { width } = Dimensions.get('window');
+
+const SearchResultsScreen = ({ route, navigation }) => {
+  const { trains: initialTrains, pagination: initialPagination, searchParams } = route.params;
+  const [trains, setTrains] = useState(initialTrains);
+  const [pagination, setPagination] = useState(initialPagination);
+  const [loading, setLoading] = useState(false);
+  const { isDarkMode } = useTheme();
   const styles = getStyles(isDarkMode);
 
-  const renderTrainTile = ({ item }) => {
-    const handleTilePress = () => {
-      navigation.navigate('BuyTicket', { train: item });
-    };
-
-    if (!item.routes || item.routes.length === 0) {
-      return (
-        <View style={styles.tile}>
-          <Text style={styles.tileTitle}>{item.name}</Text>
-          <Text style={styles.tileSubtitle}>No route information available</Text>
-        </View>
-      );
+  const fetchMoreTrains = async () => {
+    // If already loading or on the last page, don't fetch
+    if (loading || pagination.current_page >= pagination.last_page) {
+      return;
     }
 
-    const fromRoute = item.routes[0];
-    const toRoute = item.routes[item.routes.length - 1];
+    setLoading(true);
+    
+    try {
+      const response = await fetch(`${config.API_URL}/trains/search`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Accept: "application/json",
+        },
+        body: JSON.stringify({
+          ...searchParams,
+          page: pagination.current_page + 1,
+          per_page: pagination.per_page
+        }),
+      });
 
-    const formatTime = (time) => {
-      const sanitizedTime = time.replace(/(\+\d{2}:\d{2}|\+\d{2})$/, '');
-      const date = new Date(sanitizedTime);
-      return `${date.getFullYear()}-${(date.getMonth() + 1).toString().padStart(2, '0')}-${date
-        .getDate()
-        .toString()
-        .padStart(2, '0')} ${date.getHours().toString().padStart(2, '0')}:${date
-        .getMinutes()
-        .toString()
-        .padStart(2, '0')}`;
-    };
+      const data = await response.json();
+      
+      if (response.ok && data.trains.length > 0) {
+        // Append new trains to existing list
+        setTrains([...trains, ...data.trains]);
+        setPagination(data.pagination);
+      }
+    } catch (error) {
+      console.error("Error fetching more trains:", error);
+    } finally {
+      setLoading(false);
+    }
+  };
 
-    const calculateTimeFromNow = (time) => {
-      const sanitizedTime = time.replace(/(\+\d{2}:\d{2}|\+\d{2})$/, '');
-      const now = new Date();
-      const departureTime = new Date(sanitizedTime);
-      const diffInMinutes = Math.round((departureTime - now) / (1000 * 60));
-
-      if (diffInMinutes < 0) return 'Departed';
-      if (diffInMinutes === 0) return 'Departing now';
-      return `${diffInMinutes} minutes from now`;
-    };
-
+  const renderTrainItem = ({ item }) => {
+    // Get the first and last station in the route
+    const firstStation = item.routes[0];
+    const lastStation = item.routes[item.routes.length - 1];
+    
+    // Format times for display
+    const departureTime = new Date(firstStation.departure_time).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'});
+    const arrivalTime = new Date(lastStation.departure_time).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'});
+    console.log(departureTime)
     return (
-      <TouchableOpacity style={styles.tile} onPress={handleTilePress}>
-        <Text style={styles.tileTitle}>{item.name}</Text>
-        <Text style={styles.tileSubtitle}>
-          From: {fromRoute.station_name} at {formatTime(fromRoute.departure_time)}
-        </Text>
-        <Text style={styles.tileSubtitle}>
-          To: {toRoute.station_name} at {formatTime(toRoute.departure_time)}
-        </Text>
-        <Text style={styles.tileSubtitle}>
-          Time from now: {calculateTimeFromNow(fromRoute.departure_time)}
-        </Text>
+      <TouchableOpacity 
+        style={[tileStyles.trainTile, isDarkMode ? tileStyles.darkTile : tileStyles.lightTile]}
+        onPress={() => navigation.navigate('Train Detail', { train: item })}
+      >
+        <View style={tileStyles.trainHeader}>
+          <Text style={[tileStyles.trainName, isDarkMode && tileStyles.darkText]}>{item.name}</Text>
+          <Icon name="train" size={18} color={isDarkMode ? "#8eccff" : "#3377cc"} />
+        </View>
+        
+        <View style={tileStyles.routeContainer}>
+          <View style={tileStyles.stationContainer}>
+            <Text style={[tileStyles.stationLabel, isDarkMode && tileStyles.darkSecondaryText]}>From</Text>
+            <Text style={[tileStyles.stationName, isDarkMode && tileStyles.darkText]} numberOfLines={1}>{firstStation.station_name}</Text>
+            <Text style={[tileStyles.timeText, isDarkMode && tileStyles.darkSecondaryText]}>{departureTime}</Text>
+          </View>
+          
+          <View style={tileStyles.arrowContainer}>
+            <Icon name="long-arrow-right" size={24} color={isDarkMode ? "#aaa" : "#999"} />
+          </View>
+          
+          <View style={tileStyles.stationContainer}>
+            <Text style={[tileStyles.stationLabel, isDarkMode && tileStyles.darkSecondaryText]}>To</Text>
+            <Text style={[tileStyles.stationName, isDarkMode && tileStyles.darkText]} numberOfLines={1}>{lastStation.station_name}</Text>
+            <Text style={[tileStyles.timeText, isDarkMode && tileStyles.darkSecondaryText]}>{arrivalTime}</Text>
+          </View>
+        </View>
       </TouchableOpacity>
     );
   };
 
-  return (
-    <View style={styles.container}>
-      <TouchableOpacity onPress={() => navigation.goBack()} style={styles.backButton}>
-        <Ionicons name="arrow-back" size={24} color={isDarkMode ? "#fff" : "#000"} />
-      </TouchableOpacity>
+  const renderFooter = () => {
+    if (!loading) return null;
+    
+    return (
+      <View style={tileStyles.loadingFooter}>
+        <ActivityIndicator size="small" color={isDarkMode ? "#8eccff" : "#3377cc"} />
+      </View>
+    );
+  };
 
-      {trains.length > 0 ? (
-        <FlatList
-          data={trains}
-          keyExtractor={(item) => item.id.toString()}
-          renderItem={renderTrainTile}
-        />
-      ) : (
-        <Text style={styles.noResultsText}>No trains found</Text>
-      )}
+  return (
+    <View style={[styles.container, { padding: 12 }]}>
+      <Text style={styles.heading}>Search Results</Text>
+      
+      <FlatList
+        data={trains}
+        renderItem={renderTrainItem}
+        keyExtractor={(item) => item.id.toString()}
+        ListFooterComponent={renderFooter}
+        onEndReached={fetchMoreTrains}
+        onEndReachedThreshold={0.3}
+        contentContainerStyle={tileStyles.listContainer}
+      />
     </View>
   );
-}
+};
+
+// Modern tile styles
+const tileStyles = StyleSheet.create({
+  listContainer: {
+    paddingBottom: 16,
+  },
+  trainTile: {
+    width: width - 24, // Full width minus padding
+    marginBottom: 12,
+    borderRadius: 12,
+    padding: 16,
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
+    elevation: 3,
+  },
+  lightTile: {
+    backgroundColor: '#fff',
+  },
+  darkTile: {
+    backgroundColor: '#2a2a2a',
+  },
+  trainHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: 12,
+  },
+  trainName: {
+    fontSize: 16,
+    fontWeight: 'bold',
+    flex: 1,
+    color: '#333',
+  },
+  darkText: {
+    color: '#fff',
+  },
+  darkSecondaryText: {
+    color: '#bbb',
+  },
+  routeContainer: {
+    flexDirection: 'row',
+  },
+  stationContainer: {
+    flex: 4,
+  },
+  arrowContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  stationLabel: {
+    fontSize: 12,
+    color: '#888',
+    marginBottom: 2,
+  },
+  stationName: {
+    fontSize: 14,
+    fontWeight: '500',
+    color: '#333',
+    marginBottom: 2,
+  },
+  timeText: {
+    fontSize: 13,
+    color: '#666',
+  },
+  loadingFooter: {
+    paddingVertical: 20,
+    alignItems: 'center',
+  },
+});
+
+export default SearchResultsScreen;

@@ -95,12 +95,23 @@ const HomeScreen = () => {
           from_station: selectedFrom.id,
           to_station: selectedTo.id,
           departure_time: departureTime,
+          page: 1,
+          per_page: 15
         }),
       });
 
       const data = await response.json();
       if (response.ok && data.trains.length > 0) {
-        navigation.navigate('Search Results', { trains: data.trains });
+        // Pass both trains and pagination info to the search results screen
+        navigation.navigate('Search Results', { 
+          trains: data.trains,
+          pagination: data.pagination,
+          searchParams: {
+            from_station: selectedFrom.id,
+            to_station: selectedTo.id,
+            departure_time: departureTime
+          }
+        });
       } else {
         Alert.alert("No Results", "No trains found for the selected criteria.");
       }
