@@ -8,6 +8,8 @@ import { Platform, Alert } from 'react-native';
 import { UserProvider, useUser } from './context/UserContext';
 import config from './config'; // Make sure this import exists
 
+import { useTheme } from './context/ThemeContext'; // Import your theme context
+
 // screen imports
 import HomeScreen from './screens/HomeScreen';
 import Profile from './screens/Profile';
@@ -139,7 +141,10 @@ const TicketsStackNavigator = () => (
 );
 
 const AppNavigator = () => {
+  
+  const { isDarkMode } = useTheme(); // Get the current theme mode
   const { user, setUser } = useUser(); // Get both user and setter
+
 
   // Register push notification token when app starts
   useEffect(() => {
@@ -159,6 +164,11 @@ const AppNavigator = () => {
             backgroundColor: '#A74730',
           },
           headerTintColor: '#fff',
+          drawerStyle: {
+            backgroundColor: isDarkMode ? '#121212' : '#fff', // Dark mode or light mode background color
+          },
+          drawerActiveTintColor: isDarkMode ? '#fff' : '#333', // Change active item text color
+          drawerInactiveTintColor: isDarkMode ? '#bbb' : '#555', // Change inactive item text color
         }}>
 
         {/* Use TrainStackNavigator for train-related screens */}

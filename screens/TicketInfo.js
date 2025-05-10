@@ -13,9 +13,13 @@ import QRCode from "react-native-qrcode-svg";
 import MapView, { Polyline, Marker } from "react-native-maps";
 import * as Location from "expo-location";
 import TimeLine from "../components/TimeLine";
+import { useTheme } from '../context/ThemeContext';
+import { getStyles } from '../styles';
 
 const TicketInfo = ({ route }) => {
   const { ticket } = route.params;
+  const { isDarkMode } = useTheme();
+  const baseStyles = getStyles(isDarkMode);
 
   const stations = ticket.train.routes;
   const allStations = ticket.train.routes;
@@ -30,12 +34,37 @@ const TicketInfo = ({ route }) => {
   );
 
   const formatTime = (time) => {
-    const sanitizedTime = time.replace(/(\+\d{2}:\d{2}|\+\d{2})$/, '');
-    const date = new Date(sanitizedTime);
-    return `${date
-      .getHours()
-      .toString()
-      .padStart(2, '2')}:${date.getMinutes().toString().padStart(2, '2')}`;
+    if (!time) return "N/A";
+    
+    try {
+      // Split by 'T' to get the time part
+      const timePart = time.split('T')[1];
+      
+      if (!timePart) {
+        // If there's no 'T', try to parse as direct time string like "14:30:00"
+        const parts = time.split(':');
+        if (parts.length >= 2) {
+          // Only take hours and minutes
+          const hours = parts[0].padStart(2, '0');
+          const minutes = parts[1].padStart(2, '0');
+          return `${hours}:${minutes}`;
+        }
+        return "N/A";
+      }
+      
+      // Extract hours and minutes from the time part
+      const timeComponents = timePart.split(':');
+      if (timeComponents.length >= 2) {
+        const hours = timeComponents[0].padStart(2, '0');
+        const minutes = timeComponents[1].padStart(2, '0');
+        return `${hours}:${minutes}`;
+      }
+      
+      return "N/A";
+    } catch (error) {
+      console.error("Error parsing time:", error);
+      return "N/A";
+    }
   };
   
   // Format times and store the result
@@ -43,7 +72,6 @@ const TicketInfo = ({ route }) => {
     ...station,
     departure_time: formatTime(station.departure_time)
   }));
-
   
   const coordinates = stations.map((station) => ({
     latitude: station.latitude,
@@ -78,62 +106,67 @@ const TicketInfo = ({ route }) => {
   }, []);
 
   return (
-    <ScrollView style={{ flex: 1 }} contentContainerStyle={{ flexGrow: 1 }}>
-    <View style={styles.container}>
-      {/* Map */}
+    <ScrollView 
+      style={{ flex: 1, backgroundColor: isDarkMode ? '#121212' : '#f5f5f5' }} 
+      contentContainerStyle={{ flexGrow: 1 }}
+    >
+      <View style={[styles.container, { backgroundColor: isDarkMode ? '#121212' : '#f5f5f5' }]}>
+        {/* QR Code */}
+        <View style={styles.qrContainer}>
+          <QRCode value={`ticket-${ticket.id}`} size={200} ecl="H" backgroundColor={isDarkMode ? "#333" : "white"} color={isDarkMode ? "#fff" : "#000"} />
+        </View>
 
-      {/* QR Code */}
-      <View style={styles.qrContainer}>
-        <QRCode value={`ticket-${ticket.id}`} size={200} ecl="H" backgroundColor="white" />
-      </View>
+        {/* Train Name */}
+        <Text style={[styles.trainName, { color: isDarkMode ? '#fff' : '#000' }]}>
+          {train.name}
+        </Text>
 
-      {/* Train Name */}
-      <Text style={styles.trainName}>{train.name}</Text>
+        <TimeLine stations={stationsWithFormattedTimes} isDarkMode={isDarkMode} />
 
-      <TimeLine stations={stationsWithFormattedTimes} />
+        <MapView
+          style={styles.map}
+          initialRegion={{
+            latitude: stations[0]?.latitude || 0,
+            longitude: stations[0]?.longitude || 0,
+            latitudeDelta: 0.5,
+            longitudeDelta: 0.5,
+          }}
+          userInterfaceStyle={isDarkMode ? 'dark' : 'light'}
+        >
+          {/* Draw the route */}
+          <Polyline coordinates={coordinates} strokeWidth={4} strokeColor={isDarkMode ? "#8eccff" : "blue"} />
 
-      <MapView
-        style={styles.map}
-        initialRegion={{
-          latitude: stations[0]?.latitude || 0,
-          longitude: stations[0]?.longitude || 0,
-          latitudeDelta: 0.5,
-          longitudeDelta: 0.5,
-        }}
-      >
-        {/* Draw the route */}
-        <Polyline coordinates={coordinates} strokeWidth={4} strokeColor="blue" />
-
-        {/* Show current position with orientation */}
-        {currentLocation && (
-          <Marker
-            coordinate={currentLocation}
-            title="You are here"
-            anchor={{ x: 0.5, y: 0.5 }}
-          >
-            <Animated.View
-              style={[
-                styles.orientationMarker,
-                {
-                  transform: [
-                    {
-                      rotate: headingAnim.interpolate({
-                        inputRange: [0, 360],
-                        outputRange: ["0deg", "360deg"],
-                      }),
-                    },
-                  ],
-                },
-              ]}
+          {/* Show current position with orientation */}
+          {currentLocation && (
+            <Marker
+              coordinate={currentLocation}
+              title="You are here"
+              anchor={{ x: 0.5, y: 0.5 }}
             >
-              <View style={styles.arrow} />
-              <View style={styles.arrowBase} />
-            </Animated.View>
-          </Marker>
-        )}
-      </MapView>
-    </View>
-
+              <Animated.View
+                style={[
+                  styles.orientationMarker,
+                  {
+                    backgroundColor: isDarkMode ? "rgba(50, 50, 50, 0.8)" : "rgba(255, 255, 255, 0.7)",
+                    borderColor: isDarkMode ? "#555" : "#ccc",
+                    transform: [
+                      {
+                        rotate: headingAnim.interpolate({
+                          inputRange: [0, 360],
+                          outputRange: ["0deg", "360deg"],
+                        }),
+                      },
+                    ],
+                  },
+                ]}
+              >
+                <View style={styles.arrow} />
+                <View style={styles.arrowBase} />
+              </Animated.View>
+            </Marker>
+          )}
+        </MapView>
+      </View>
     </ScrollView>
   );
 };
@@ -141,7 +174,6 @@ const TicketInfo = ({ route }) => {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: "#f5f5f5",
     padding: 16,
   },
   qrContainer: {
@@ -173,32 +205,30 @@ const styles = StyleSheet.create({
     marginTop: 20,
   },
   orientationMarker: {
-    width: 30, // Slightly larger marker
+    width: 30,
     height: 30,
     justifyContent: "center",
     alignItems: "center",
-    backgroundColor: "rgba(255, 255, 255, 0.7)",
     borderRadius: 20,
     borderWidth: 1,
-    borderColor: "#ccc",
   },
   arrow: {
     width: 0,
     height: 0,
-    borderLeftWidth: 12, // Wider base for the arrow
+    borderLeftWidth: 12,
     borderRightWidth: 12,
-    borderBottomWidth: 20, // Longer arrow
+    borderBottomWidth: 20,
     borderLeftColor: "transparent",
     borderRightColor: "transparent",
-    borderBottomColor: "red", // Arrow color
-    transform: [{ translateY: -5 }], // Slightly offset to make it more prominent
+    borderBottomColor: "red",
+    transform: [{ translateY: -5 }],
   },
   arrowBase: {
-    width: 6, // Small circle at the base of the arrow
+    width: 6,
     height: 6,
     backgroundColor: "red",
     borderRadius: 3,
-    marginTop: -5, // Position it at the base of the arrow
+    marginTop: -5,
   },
 });
 

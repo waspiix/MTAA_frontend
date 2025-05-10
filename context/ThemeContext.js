@@ -5,8 +5,8 @@ const ThemeContext = createContext();
 
 export const ThemeProvider = ({ children }) => {
   const systemTheme = Appearance.getColorScheme();
-  const [isDarkMode, setIsDarkMode] = useState(systemTheme === 'dark');
-
+  const [isDarkMode, setIsDarkMode] = useState(systemTheme === 'dark' || false);
+    
   const toggleTheme = () => setIsDarkMode(prev => !prev);
 
   return (
