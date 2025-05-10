@@ -26,6 +26,15 @@ import Settings from './screens/SettingsScreen';
 import { ThemeProvider } from './context/ThemeContext';
 import { NotificationsProvider } from './context/NotificationsContext';
 
+// Add this to your App.js
+Notifications.setNotificationHandler({
+  handleNotification: async () => ({
+    shouldShowAlert: true,
+    shouldPlaySound: true,
+    shouldSetBadge: false,
+  }),
+});
+
 // Function to register for push notifications
 async function registerForPushNotificationsAsync(userToken, setUser) {
   let token;
