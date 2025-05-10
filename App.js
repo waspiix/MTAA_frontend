@@ -6,6 +6,7 @@ import * as Notifications from 'expo-notifications';
 import Constants from 'expo-constants';
 import { Platform, Alert } from 'react-native';
 import { UserProvider, useUser } from './context/UserContext';
+import config from './config'; // Make sure this import exists
 
 // screen imports
 import HomeScreen from './screens/HomeScreen';
@@ -26,7 +27,7 @@ import { ThemeProvider } from './context/ThemeContext';
 import { NotificationsProvider } from './context/NotificationsContext';
 
 // Function to register for push notifications
-async function registerForPushNotificationsAsync(userToken) {
+async function registerForPushNotificationsAsync(userToken, setUser) {
   let token;
 
   if (Platform.OS === 'android') {
@@ -48,26 +49,33 @@ async function registerForPushNotificationsAsync(userToken) {
     Alert.alert('Push notifikácie neboli povolené!');
     return;
   }
-
-  token = (await Notifications.getExpoPushTokenAsync({
-    projectId: Constants.expoConfig.extra.eas.projectId,
-  })).data;
-
-  if (token) {
-    // Uložte token do UserContext
-    useUser((prevUser) => ({ ...prevUser, expo_token: token }));
-
-    // Ak je token a používateľský token, pošlite ho na backend
-    if (userToken) {
-      fetch('https://192.168.0.107:8002/api/store-token', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          Authorization: `Bearer ${userToken}`,
-        },
-        body: JSON.stringify({ expo_token: token }),
-      }).catch((error) => console.error('Error storing token:', error));
+  
+  try {
+    token = (await Notifications.getExpoPushTokenAsync({
+      projectId: Constants.expoConfig.extra.eas.projectId,
+    })).data;
+    
+    if (token) {
+      // Use the passed setter function instead of the hook directly
+      if (setUser) {
+        setUser((prevUser) => ({ ...prevUser, expo_token: token }));
+      }
+      
+      console.log('Expo Push Token:', token);
+      // Ak je token a používateľský token, pošlite ho na backend
+      if (userToken) {
+        fetch(`${config.API_URL}/store-token`, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            Authorization: `Bearer ${userToken}`,
+          },
+          body: JSON.stringify({ expo_token: token }),
+        }).catch((error) => console.error('Error storing token:', error));
+      }
     }
+  } catch (error) {
+    console.error("Error getting push token:", error);
   }
 
   return token;
@@ -122,17 +130,17 @@ const TicketsStackNavigator = () => (
 );
 
 const AppNavigator = () => {
-  const { user } = useUser(); // Get the user role from context
+  const { user, setUser } = useUser(); // Get both user and setter
 
   // Register push notification token when app starts
   useEffect(() => {
     if (user.token) {
-      registerForPushNotificationsAsync(user.token).then((token) => {
+      registerForPushNotificationsAsync(user.token, setUser).then((token) => {
         // Handle any additional logic if needed after registering
-        console.log('Push notification token:', token);
+        console.log('Push notification token registered:', token);
       });
     }
-  }, [user.token]); // Runs only when `user.token` changes
+  }, [user.token, setUser]); // Include setUser in dependencies
 
   return (
     <NavigationContainer>

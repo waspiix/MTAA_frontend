@@ -18,8 +18,10 @@
     "@react-navigation/native": "^7.0.19",
     "@react-navigation/stack": "^7.2.10",
     "expo": "~52.0.46",
+    "expo-device": "~7.0.3",
     "expo-location": "^18.1.4",
     "expo-maps": "^0.9.9",
+    "expo-notifications": "~0.29.14",
     "expo-status-bar": "~2.0.1",
     "react": "18.3.1",
     "react-dom": "18.3.1",
@@ -31,11 +33,11 @@
     "react-native-vector-icons": "^10.2.0",
     "react-native-web": "~0.19.13",
     "react-native-webview": "^13.12.5",
-    "expo-notifications": "~0.29.14",
-    "expo-device": "~7.0.3"
+    "expo-updates": "~0.27.4"
   },
   "devDependencies": {
-    "@babel/core": "^7.20.0"
+    "@babel/core": "^7.20.0",
+    "eas-cli": "^16.4.1"
   },
   "private": true
 }

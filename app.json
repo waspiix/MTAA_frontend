@@ -13,20 +13,32 @@
       "backgroundColor": "#ffffff"
     },
     "ios": {
-      "supportsTablet": true
+      "supportsTablet": true,
+      "runtimeVersion": {
+        "policy": "appVersion"
+      }
     },
     "android": {
       "adaptiveIcon": {
         "foregroundImage": "./assets/adaptive-icon.png",
         "backgroundColor": "#ffffff"
       },
-      "package": "com.anonymous.myproject"
+      "package": "com.anonymous.myproject",
+      "runtimeVersion": "1.0.0"
     },
     "web": {
       "favicon": "./assets/favicon.png"
     },
     "plugins": [
       "expo-maps"
-    ]
+    ],
+    "extra": {
+      "eas": {
+        "projectId": "3c8ba892-bd20-4cd5-8a03-ef3d9fc7161c"
+      }
+    },
+    "updates": {
+      "url": "https://u.expo.dev/3c8ba892-bd20-4cd5-8a03-ef3d9fc7161c"
+    }
   }
 }
