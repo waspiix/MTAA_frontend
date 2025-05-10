@@ -1,5 +1,5 @@
-import React, { useState, useCallback } from "react";
-import { View, Text, TextInput, FlatList, TouchableOpacity, Alert, Switch } from "react-native";
+import React, { useState, useCallback, useRef } from "react";
+import { View, Text, TextInput, FlatList, TouchableOpacity, Alert, Switch, Keyboard, TouchableWithoutFeedback } from "react-native";
 import { DateTimePickerAndroid } from "@react-native-community/datetimepicker";
 import config from "../config.json";
 import { useNavigation } from "@react-navigation/native";
@@ -23,6 +23,9 @@ const HomeScreen = () => {
   const styles = getStyles(isDarkMode);
   const { user } = useUser();
   const [isNewsChecked, setIsNewsChecked] = useState(false);
+
+  const fromInputRef = useRef(null);
+  const toInputRef = useRef(null);
 
   const searchStations = async (query, setStations) => {
     if (query.length < 3) {
@@ -78,6 +81,30 @@ const HomeScreen = () => {
     });
   };
 
+  const selectFromStation = (item) => {
+    if (fromInputRef.current) {
+      fromInputRef.current.blur();
+    }
+
+    setTimeout(() => {
+      setSelectedFrom(item);
+      setFromQuery(item.name);
+      setFromStations([]);
+    }, 10);
+  };
+
+  const selectToStation = (item) => {
+    if (toInputRef.current) {
+      toInputRef.current.blur();
+    }
+
+    setTimeout(() => {
+      setSelectedTo(item);
+      setToQuery(item.name);
+      setToStations([]);
+    }, 10);
+  };
+
   const handleSearch = async () => {
     if (!selectedFrom || !selectedTo) {
       Alert.alert("Error", "Please select both 'From' and 'To' stations.");
@@ -104,7 +131,6 @@ const HomeScreen = () => {
 
       const data = await response.json();
       if (response.ok && data.trains.length > 0) {
-        // Pass both trains and pagination info to the search results screen
         navigation.navigate('Search Results', { 
           trains: data.trains,
           pagination: data.pagination,
@@ -125,10 +151,11 @@ const HomeScreen = () => {
   };
 
   return (
-    <View style={styles.container}>
-      <Text style={styles.heading}>Zadajte</Text>
+    <TouchableWithoutFeedback onPress={Keyboard.dismiss}>
+      <View style={styles.container}>
+        <Text style={styles.heading}>Zadajte</Text>
 
-      {user.privilege === 2 && (
+        {user.privilege === 2 && (
           <View style={ styles.row}>
             <Text style={{ marginLeft: 10, color: isDarkMode ? "#fff" : "#000" }}>ADMIN - Zadaj aktualitu spoju</Text>
             <Switch
@@ -136,97 +163,95 @@ const HomeScreen = () => {
               onValueChange={setIsNewsChecked}
             />
           </View>
-      )}
-
-      {/* From Station */}
-      <View style={styles.inputContainer}>
-        <TextInput
-          style={styles.input}
-          placeholder="Odkiaľ"
-          placeholderTextColor={isDarkMode ? "#aaa" : "#999"}
-          value={fromQuery}
-          onChangeText={(query) => {
-            setFromQuery(query);
-            debounceSearch(query, setFromStations);
-          }}
-        />
-        {fromStations.length > 0 && (
-          <View style={styles.overlay}>
-            <FlatList
-              data={fromStations}
-              keyExtractor={(item) => item.id.toString()}
-              renderItem={({ item }) => (
-                <TouchableOpacity
-                  style={styles.stationItem}
-                  onPress={() => {
-                    setSelectedFrom(item);
-                    setFromQuery(item.name);
-                    setFromStations([]);
-                  }}
-                >
-                  <Text style={styles.resultText}>{item.name}</Text>
-                </TouchableOpacity>
-              )}
-            />
-          </View>
         )}
-      </View>
 
-      {/* To Station */}
-      <View style={styles.inputContainer}>
-        <TextInput
-          style={styles.input}
-          placeholder="Kam"
-          placeholderTextColor={isDarkMode ? "#aaa" : "#999"}
-          value={toQuery}
-          onChangeText={(query) => {
-            setToQuery(query);
-            debounceSearch(query, setToStations);
-          }}
-        />
-        {toStations.length > 0 && (
-          <View style={styles.overlay}>
-            <FlatList
-              data={toStations}
-              keyExtractor={(item) => item.id.toString()}
-              renderItem={({ item }) => (
-                <TouchableOpacity
-                  style={styles.stationItem}
-                  onPress={() => {
-                    setSelectedTo(item);
-                    setToQuery(item.name);
-                    setToStations([]);
-                  }}
-                >
-                  <Text style={styles.resultText}>{item.name}</Text>
-                </TouchableOpacity>
-              )}
-            />
-          </View>
-        )}
-      </View>
-
-      <TouchableOpacity style={styles.dateButton} onPress={showDatePicker}>
-        <Text style={styles.dateButtonText}>Vybrať dátum</Text>
-      </TouchableOpacity>
-      <Text style={styles.dateText}>Vybraný dátum: {date.toDateString()}</Text>
-
-      <TouchableOpacity style={styles.dateButton} onPress={showTimePicker}>
-        <Text style={styles.dateButtonText}>Vybrať čas</Text>
-      </TouchableOpacity>
-      <Text style={styles.dateText}>
-        Vybraný čas: {time.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
-      </Text>
-
-      <TouchableOpacity style={styles.searchButton} onPress={handleSearch}>
-        <View style={styles.searchButtonContent}>
-          <Icon name="train" size={20} color="#fff" style={styles.icon} />
-          <Text style={styles.searchButtonText}>Vyhľadaj spoj</Text>
+        {/* From Station */}
+        <View style={styles.inputContainer}>
+          <TextInput
+            ref={fromInputRef}
+            style={styles.input}
+            placeholder="Odkiaľ"
+            placeholderTextColor={isDarkMode ? "#aaa" : "#999"}
+            value={fromQuery}
+            onChangeText={(query) => {
+              setFromQuery(query);
+              debounceSearch(query, setFromStations);
+            }}
+            onBlur={() => Keyboard.dismiss()}
+          />
+          {fromStations.length > 0 && (
+            <View style={styles.overlay}>
+              <FlatList
+                keyboardShouldPersistTaps="handled"
+                data={fromStations}
+                keyExtractor={(item) => item.id.toString()}
+                renderItem={({ item }) => (
+                  <TouchableOpacity
+                    style={styles.stationItem}
+                    onPress={() => selectFromStation(item)}
+                  >
+                    <Text style={styles.resultText}>{item.name}</Text>
+                  </TouchableOpacity>
+                )}
+              />
+            </View>
+          )}
         </View>
-      </TouchableOpacity>
-    </View>
+
+        {/* To Station */}
+        <View style={styles.inputContainer}>
+          <TextInput
+            ref={toInputRef}
+            style={styles.input}
+            placeholder="Kam"
+            placeholderTextColor={isDarkMode ? "#aaa" : "#999"}
+            value={toQuery}
+            onChangeText={(query) => {
+              setToQuery(query);
+              debounceSearch(query, setToStations);
+            }}
+            onBlur={() => Keyboard.dismiss()}
+          />
+          {toStations.length > 0 && (
+            <View style={styles.overlay}>
+              <FlatList
+                keyboardShouldPersistTaps="handled"
+                data={toStations}
+                keyExtractor={(item) => item.id.toString()}
+                renderItem={({ item }) => (
+                  <TouchableOpacity
+                    style={styles.stationItem}
+                    onPress={() => selectToStation(item)}
+                  >
+                    <Text style={styles.resultText}>{item.name}</Text>
+                  </TouchableOpacity>
+                )}
+              />
+            </View>
+          )}
+        </View>
+
+        <TouchableOpacity style={styles.dateButton} onPress={showDatePicker}>
+          <Text style={styles.dateButtonText}>Vybrať dátum</Text>
+        </TouchableOpacity>
+        <Text style={styles.dateText}>Vybraný dátum: {date.toDateString()}</Text>
+
+        <TouchableOpacity style={styles.dateButton} onPress={showTimePicker}>
+          <Text style={styles.dateButtonText}>Vybrať čas</Text>
+        </TouchableOpacity>
+        <Text style={styles.dateText}>
+          Vybraný čas: {time.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+        </Text>
+
+        <TouchableOpacity style={styles.searchButton} onPress={handleSearch}>
+          <View style={styles.searchButtonContent}>
+            <Icon name="train" size={20} color="#fff" style={styles.icon} />
+            <Text style={styles.searchButtonText}>Vyhľadaj spoj</Text>
+          </View>
+        </TouchableOpacity>
+      </View>
+    </TouchableWithoutFeedback>
   );
 };
-
 
 export default HomeScreen;
