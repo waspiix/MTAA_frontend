@@ -18,8 +18,33 @@ const TicketInfo = ({ route }) => {
   const { ticket } = route.params;
 
   const stations = ticket.train.routes;
+  const allStations = ticket.train.routes;
   const train = ticket.train;
-  console.log("Ticket Info:", ticket);
+  const startStationId = ticket.start_station.id;
+  const endStationId = ticket.end_station.id;
+  const startIndex = allStations.findIndex(station => station.station_id === startStationId);
+  const endIndex = allStations.findIndex(station => station.station_id === endStationId);
+  const filteredStations = allStations.slice(
+    startIndex !== -1 ? startIndex : 0,
+    endIndex !== -1 ? endIndex + 1 : allStations.length
+  );
+
+  const formatTime = (time) => {
+    const sanitizedTime = time.replace(/(\+\d{2}:\d{2}|\+\d{2})$/, '');
+    const date = new Date(sanitizedTime);
+    return `${date
+      .getHours()
+      .toString()
+      .padStart(2, '2')}:${date.getMinutes().toString().padStart(2, '2')}`;
+  };
+  
+  // Format times and store the result
+  const stationsWithFormattedTimes = filteredStations.map(station => ({
+    ...station,
+    departure_time: formatTime(station.departure_time)
+  }));
+
+  
   const coordinates = stations.map((station) => ({
     latitude: station.latitude,
     longitude: station.longitude,
@@ -65,7 +90,7 @@ const TicketInfo = ({ route }) => {
       {/* Train Name */}
       <Text style={styles.trainName}>{train.name}</Text>
 
-      <TimeLine stations={stations} />
+      <TimeLine stations={stationsWithFormattedTimes} />
 
       <MapView
         style={styles.map}
