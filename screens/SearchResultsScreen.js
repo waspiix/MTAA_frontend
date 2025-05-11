@@ -21,6 +21,7 @@ const SearchResultsScreen = ({ route, navigation }) => {
   const { user } = useUser();
 
   const fetchMoreTrains = async () => {
+    
     // If already loading or on the last page, don't fetch
     if (loading || pagination.current_page >= pagination.last_page) {
       return;
@@ -76,6 +77,8 @@ const SearchResultsScreen = ({ route, navigation }) => {
     // Format date for display (e.g., "May 10, 2025")
     const formattedDate = departureDate.toLocaleDateString([], {month: 'short', day: 'numeric', year: 'numeric'});
     
+
+    
     return (
       <TouchableOpacity 
         style={[tileStyles.trainTile, isDarkMode ? tileStyles.darkTile : tileStyles.lightTile]}
@@ -89,7 +92,15 @@ const SearchResultsScreen = ({ route, navigation }) => {
         }}
       >
         <View style={tileStyles.trainHeader}>
-          <Text style={[tileStyles.trainName, isDarkMode && tileStyles.darkText]}>{item.name}</Text>
+          <View style={{ flexDirection: 'row', alignItems: 'center', flex: 1 }}>
+            <Text style={[tileStyles.trainName, isDarkMode && tileStyles.darkText]}>{item.name}</Text>
+            {item.delay != null && (
+              <Text style={[tileStyles.delayText]}>
+              
+                +{item.delay} min
+              </Text>
+            )}
+          </View>
           <View style={tileStyles.dateContainer}>
             <Text style={[tileStyles.dateText, isDarkMode && tileStyles.darkSecondaryText]}>{formattedDate}</Text>
             <Icon name="train" size={18} color={isDarkMode ? "#8eccff" : "#3377cc"} />
@@ -223,6 +234,16 @@ const tileStyles = StyleSheet.create({
   timeText: {
     fontSize: 13,
     color: '#666',
+  },
+  delayText: {
+    fontSize: 12,
+    fontWeight: 'bold',
+    color: '#ff3b30',
+    marginLeft: 8,
+    paddingHorizontal: 6,
+    paddingVertical: 2,
+    borderRadius: 4,
+    backgroundColor: 'rgba(255, 59, 48, 0.1)',
   },
   loadingFooter: {
     paddingVertical: 20,
