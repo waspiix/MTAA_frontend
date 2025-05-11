@@ -24,6 +24,11 @@ export const getStyles = (isDarkMode) =>
       fontSize: 14,
       color: isDarkMode ? '#ccc' : '#555',
     },
+    tileSubtitleTime: {
+      fontSize: 12,
+      marginTop: 4,
+      color: isDarkMode ? '#ccc' : '#555',
+    },
     noResultsText: {
       fontSize: 16,
       color: isDarkMode ? '#aaa' : '#888',

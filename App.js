@@ -9,7 +9,6 @@ import { UserProvider, useUser } from './context/UserContext';
 import config from './config'; // Make sure this import exists
 
 import { useTheme } from './context/ThemeContext'; // Import your theme context
-
 // screen imports
 import HomeScreen from './screens/HomeScreen';
 import Profile from './screens/Profile';
@@ -28,7 +27,6 @@ import Settings from './screens/SettingsScreen';
 import { ThemeProvider } from './context/ThemeContext';
 import { NotificationsProvider } from './context/NotificationsContext';
 
-// Add this to your App.js
 Notifications.setNotificationHandler({
   handleNotification: async () => ({
     shouldShowAlert: true,
@@ -73,7 +71,7 @@ async function registerForPushNotificationsAsync(userToken, setUser) {
       }
       
       console.log('Expo Push Token:', token);
-      // Ak je token a používateľský token, pošlite ho na backend
+      // Ak je token a používateľský token, posle ho na backend
       if (userToken) {
         fetch(`${config.API_URL}/store-token`, {
           method: 'POST',
