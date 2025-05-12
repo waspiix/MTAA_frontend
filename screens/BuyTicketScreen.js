@@ -1,5 +1,5 @@
 import React from 'react';
-import { View, Text, Alert, TouchableOpacity, ScrollView, Image, Modal, Button, TextInput } from 'react-native';
+import { View, Text, Alert, TouchableOpacity, ScrollView, Image, Modal, Button, TextInput, ActivityIndicator } from 'react-native';
 import config from '../config.json';
 import { Ionicons } from '@expo/vector-icons';
 import { useUser } from '../context/UserContext';
@@ -20,6 +20,7 @@ export default function BuyTicketScreen({ route, navigation }) {
   const [seat, setSeat] = useState('');
   const [reservationText, setReservationText] = useState('');
   const [travelClass, setTravelClass] = useState('2');
+  const [isLoading, setIsLoading] = useState(false);
 
   const trainImages = {
     'Express Train': require('../assets/trains/express_train.jpg'),
@@ -52,7 +53,10 @@ export default function BuyTicketScreen({ route, navigation }) {
   };
 
   const startPayment = async () => {
+    if (isLoading) return; // Prevent multiple clicks
+
     try {
+      setIsLoading(true);
       const response = await fetch(`${config.API_URL}/payment/start`, {
         method: 'POST',
         headers: {
@@ -79,6 +83,8 @@ export default function BuyTicketScreen({ route, navigation }) {
     } catch (error) {
       console.error(error);
       Alert.alert('Error', 'Failed to start payment. Please try again.');
+    } finally {
+      setIsLoading(false);
     }
   };
 
@@ -229,8 +235,16 @@ export default function BuyTicketScreen({ route, navigation }) {
         </Text>
       )}
 
-      <TouchableOpacity onPress={startPayment} style={styles.button}>
-        <Text style={styles.buttonText}>Potvrdiť objednávku</Text>
+      <TouchableOpacity 
+        onPress={startPayment} 
+        style={[styles.button, isLoading && { opacity: 0.7 }]} 
+        disabled={isLoading}
+      >
+        {isLoading ? (
+          <ActivityIndicator color="#fff" size="small" />
+        ) : (
+          <Text style={styles.buttonText}>Potvrdiť objednávku</Text>
+        )}
       </TouchableOpacity>
     </ScrollView>
   );
