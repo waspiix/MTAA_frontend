@@ -1,6 +1,6 @@
 import React, { useEffect } from 'react';
-import { NavigationContainer } from '@react-navigation/native';
-import { createDrawerNavigator } from '@react-navigation/drawer';
+import { NavigationContainer, CommonActions } from '@react-navigation/native';
+import { createDrawerNavigator, DrawerContentScrollView, DrawerItemList } from '@react-navigation/drawer';
 import { createStackNavigator } from '@react-navigation/stack';
 import * as Notifications from 'expo-notifications';
 import Constants from 'expo-constants';
@@ -143,6 +143,15 @@ const AppNavigator = () => {
   const { isDarkMode } = useTheme(); // Get the current theme mode
   const { user, setUser } = useUser(); // Get both user and setter
 
+  // This function will reset stack to first screen
+  const resetStackAndNavigate = (navigation, name) => {
+    navigation.dispatch(
+      CommonActions.reset({
+        index: 0,
+        routes: [{ name: name }],
+      })
+    );
+  };
 
   // Register push notification token when app starts
   useEffect(() => {
@@ -156,7 +165,8 @@ const AppNavigator = () => {
 
   return (
     <NavigationContainer>
-      <Drawer.Navigator initialRouteName="Vyhľadanie spojenia"
+      <Drawer.Navigator 
+        initialRouteName="Vyhľadanie spojenia"
         screenOptions={{
           headerStyle: {
             backgroundColor: '#A74730',
@@ -167,18 +177,43 @@ const AppNavigator = () => {
           },
           drawerActiveTintColor: isDarkMode ? '#fff' : '#333', // Change active item text color
           drawerInactiveTintColor: isDarkMode ? '#bbb' : '#555', // Change inactive item text color
-        }}>
-
+        }}
+        drawerContent={props => {
+          const { navigation } = props;
+          return (
+            <DrawerContentScrollView {...props}>
+              <DrawerItemList {...props} />
+              {/* You can add custom drawer items here if needed */}
+            </DrawerContentScrollView>
+          );
+        }}
+      >
         {/* Use TrainStackNavigator for train-related screens */}
-        <Drawer.Screen name="Vyhľadanie spojenia">
+        <Drawer.Screen 
+          name="Vyhľadanie spojenia"
+          listeners={({ navigation }) => ({
+            focus: () => {
+              // This directly navigates to the first screen of the stack
+              navigation.navigate("Vyhľadanie spojenia", { screen: "Home" });
+            }
+          })}
+        >
           {({ navigation, route }) => (
             <HeaderFooter navigation={navigation} route={route}>
-               <TrainStackNavigator />
+              <TrainStackNavigator />
             </HeaderFooter>
           )}
         </Drawer.Screen>
 
-        <Drawer.Screen name="Tickets">
+        <Drawer.Screen 
+          name="Tickets"
+          listeners={({ navigation }) => ({
+            focus: () => {
+              // This directly navigates to the first screen of the stack
+              navigation.navigate("Tickets", { screen: "listky" });
+            }
+          })}
+        >
           {({ navigation, route }) => (
             <HeaderFooter navigation={navigation} route={route}>
               <TicketsStackNavigator />
