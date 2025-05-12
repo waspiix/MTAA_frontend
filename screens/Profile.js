@@ -7,6 +7,7 @@ import {
   StyleSheet,
   Alert,
   Image,
+  useWindowDimensions,
 } from "react-native";
 import config from "../config.json";
 import { useUser } from "../context/UserContext";
@@ -17,7 +18,9 @@ import { getStyles } from "../styles";
 const Profile = () => {
   const { user, setUser } = useUser();
   const { isDarkMode } = useTheme();
-  const styles = getStyles(isDarkMode);
+  const { width } = useWindowDimensions();
+  const isTablet = width >= 768;
+  const styles = getStyles(isDarkMode, isTablet);
 
 
   const [isRegister, setIsRegister] = useState(false);
@@ -47,6 +50,7 @@ const Profile = () => {
         email: user.email,
         password: "",
         passwordConfirmation: "",
+        discountCard: user.card_id || "",
       });
     }
   }, [user]);
@@ -93,6 +97,8 @@ const Profile = () => {
           email: data.email,
           token: data.token,
           privilege: data.privilege,
+          card_id: data.card_id || null,
+          discount: data.discount?.name || null,
         });
         Alert.alert("Success", isRegister ? "Registered successfully." : `Login successful. Welcome, ${data.firstname}.`);
       } else {
@@ -119,7 +125,7 @@ const Profile = () => {
           email: editData.email,
           password: editData.password || undefined,
           password_confirmation: editData.passwordConfirmation || undefined,
-          card_id: editData.discountCard || undefined, // pridaj kartu
+          card_id: editData.discountCard || undefined,
         }),
       });
   
@@ -132,7 +138,7 @@ const Profile = () => {
           lastname: data.user.last_name,
           email: data.user.email,
           card_id: data.user.card_id || null,
-          discount: data.user.discount?.name || null, // backend musí vrátiť discount.name
+          discount: data.user.discount?.name || null,
         });
         setEditMode(false);
         Alert.alert("Úspech", data.message || "Profil bol aktualizovaný.");

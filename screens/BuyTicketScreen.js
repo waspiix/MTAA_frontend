@@ -1,5 +1,5 @@
 import React from 'react';
-import { View, Text, Alert, TouchableOpacity, ScrollView, Image, Modal, Button, TextInput } from 'react-native';
+import { View, Text, Alert, useWindowDimensions ,TouchableOpacity, ScrollView, Image, Modal, Button, TextInput } from 'react-native';
 import config from '../config.json';
 import { Ionicons } from '@expo/vector-icons';
 import { useUser } from '../context/UserContext';
@@ -12,7 +12,9 @@ export default function BuyTicketScreen({ route, navigation }) {
   const { train } = route.params;
   const { user } = useUser();
   const { isDarkMode } = useTheme();
-  const styles = getStyles(isDarkMode);
+  const { width } = useWindowDimensions();
+  const isTablet = width >= 768;
+  const styles = getStyles(isDarkMode, isTablet);
 
   // sluzi pre rezervaciu miesta
   const [modalVisible, setModalVisible] = useState(false);
@@ -22,9 +24,23 @@ export default function BuyTicketScreen({ route, navigation }) {
   const [travelClass, setTravelClass] = useState('2');
 
   const trainImages = {
-    'Express Train': require('../assets/trains/express_train.jpg'),
+    Ex: require('../assets/trains/express_train.jpg'),
+    OS: require('../assets/trains/osobny_train.jpg'),
   };
-  const trainImageSource = trainImages[train.name] || require('../assets/trains/default.jpg');
+
+  // Funkcia na získanie obrázku vlaku podľa mena
+  const getTrainImage = (trainName) => {
+    if (!trainName) return require('../assets/trains/default.jpg');
+
+    const typeMatch = trainName.match(/^[A-Za-z]+/);
+    if (!typeMatch) return require('../assets/trains/default.jpg');
+
+    const type = typeMatch[0];
+    return trainImages[type] || require('../assets/trains/default.jpg');
+  };
+
+  // Získaj obrázok pre konkrétny vlak
+  const trainImageSource = getTrainImage(train.name);
 
   const fromRoute = train.routes[0];
   const toRoute = train.routes[train.routes.length - 1];
@@ -104,11 +120,14 @@ export default function BuyTicketScreen({ route, navigation }) {
         </Text>
       </View>
       
-      {trainImageSource && (
+      {trainImageSource ? (
         <Image
-        source={trainImageSource}
-        style={{ width: '100%', height: 150, resizeMode: 'cover', borderRadius: 8, marginVertical: 16 }}
+          source={trainImageSource}
+          style={styles.trainImage}
+          onError={() => console.warn('Failed to load train image')}
         />
+      ) : (
+        <Text style={styles.tileSubtitle}>Image not available</Text>
       )}
 
       <View style={styles.tile}>

@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { View, Text, FlatList, ActivityIndicator, TouchableOpacity, StyleSheet, Dimensions } from 'react-native';
+import { View, Text, FlatList, ActivityIndicator, TouchableOpacity, useWindowDimensions, StyleSheet, Dimensions } from 'react-native';
 import { useTheme } from '../context/ThemeContext';
 import { getStyles } from "../styles";
 import config from "../config.json";
@@ -7,7 +7,6 @@ import Icon from 'react-native-vector-icons/FontAwesome';
 import { Ionicons } from '@expo/vector-icons';
 import { useUser } from '../context/UserContext';
 
-const { width } = Dimensions.get('window');
 
 
 const SearchResultsScreen = ({ route, navigation }) => {
@@ -16,7 +15,9 @@ const SearchResultsScreen = ({ route, navigation }) => {
   const [pagination, setPagination] = useState(initialPagination);
   const [loading, setLoading] = useState(false);
   const { isDarkMode } = useTheme();
-  const styles = getStyles(isDarkMode);
+  const { width } = useWindowDimensions();
+  const isTablet = width >= 768;
+  const styles = getStyles(isDarkMode, isTablet);
   const { isNewsChecked = false } = route.params;
   const { user } = useUser();
 
@@ -81,7 +82,7 @@ const SearchResultsScreen = ({ route, navigation }) => {
     
     return (
       <TouchableOpacity 
-        style={[tileStyles.trainTile, isDarkMode ? tileStyles.darkTile : tileStyles.lightTile]}
+        style={[styles.trainTile, isDarkMode ? styles.darkTile : styles.lightTile]}
         // pri stlaceni ak admin edituje tak ho to presmeruje na UpdateTrainScreen inak na BuyTicket
         onPress={() => {
           if (user?.privilege === 2 && isNewsChecked) {
@@ -91,37 +92,37 @@ const SearchResultsScreen = ({ route, navigation }) => {
           }
         }}
       >
-        <View style={tileStyles.trainHeader}>
+        <View style={styles.trainHeader}>
           <View style={{ flexDirection: 'row', alignItems: 'center', flex: 1 }}>
-            <Text style={[tileStyles.trainName, isDarkMode && tileStyles.darkText]}>{item.name}</Text>
+            <Text style={[styles.trainName, isDarkMode && styles.darkText]}>{item.name}</Text>
             {item.delay != null && (
-              <Text style={[tileStyles.delayText]}>
+              <Text style={[styles.delayText]}>
               
                 +{item.delay} min
               </Text>
             )}
           </View>
-          <View style={tileStyles.dateContainer}>
-            <Text style={[tileStyles.dateText, isDarkMode && tileStyles.darkSecondaryText]}>{formattedDate}</Text>
+          <View style={styles.dateContainer}>
+            <Text style={[styles.dateText, isDarkMode && styles.darkSecondaryText]}>{formattedDate}</Text>
             <Icon name="train" size={18} color={isDarkMode ? "#8eccff" : "#3377cc"} />
           </View>
         </View>
         
-        <View style={tileStyles.routeContainer}>
-          <View style={tileStyles.stationContainer}>
-            <Text style={[tileStyles.stationLabel, isDarkMode && tileStyles.darkSecondaryText]}>From</Text>
-            <Text style={[tileStyles.stationName, isDarkMode && tileStyles.darkText]} numberOfLines={1}>{firstStation.station_name}</Text>
-            <Text style={[tileStyles.timeText, isDarkMode && tileStyles.darkSecondaryText]}>{departureTime}</Text>
+        <View style={styles.routeContainer}>
+          <View style={styles.stationContainer}>
+            <Text style={[styles.stationLabel, isDarkMode && styles.darkSecondaryText]}>From</Text>
+            <Text style={[styles.stationName, isDarkMode && styles.darkText]} numberOfLines={1}>{firstStation.station_name}</Text>
+            <Text style={[styles.timeText, isDarkMode && styles.darkSecondaryText]}>{departureTime}</Text>
           </View>
           
-          <View style={tileStyles.arrowContainer}>
+          <View style={styles.arrowContainer}>
             <Icon name="long-arrow-right" size={24} color={isDarkMode ? "#aaa" : "#999"} />
           </View>
           
-          <View style={tileStyles.stationContainer}>
-            <Text style={[tileStyles.stationLabel, isDarkMode && tileStyles.darkSecondaryText]}>To</Text>
-            <Text style={[tileStyles.stationName, isDarkMode && tileStyles.darkText]} numberOfLines={1}>{lastStation.station_name}</Text>
-            <Text style={[tileStyles.timeText, isDarkMode && tileStyles.darkSecondaryText]}>{arrivalTime}</Text>
+          <View style={styles.stationContainer}>
+            <Text style={[styles.stationLabel, isDarkMode && styles.darkSecondaryText]}>To</Text>
+            <Text style={[styles.stationName, isDarkMode && styles.darkText]} numberOfLines={1}>{lastStation.station_name}</Text>
+            <Text style={[styles.timeText, isDarkMode && styles.darkSecondaryText]}>{arrivalTime}</Text>
           </View>
         </View>
       </TouchableOpacity>
@@ -132,7 +133,7 @@ const SearchResultsScreen = ({ route, navigation }) => {
     if (!loading) return null;
     
     return (
-      <View style={tileStyles.loadingFooter}>
+      <View style={styles.loadingFooter}>
         <ActivityIndicator size="small" color={isDarkMode ? "#8eccff" : "#3377cc"} />
       </View>
     );
@@ -154,101 +155,10 @@ const SearchResultsScreen = ({ route, navigation }) => {
         ListFooterComponent={renderFooter}
         onEndReached={fetchMoreTrains}
         onEndReachedThreshold={0.3}
-        contentContainerStyle={tileStyles.listContainer}
+        contentContainerStyle={styles.listContainer}
       />
     </View>
   );
 };
-
-// Modern tile styles
-const tileStyles = StyleSheet.create({
-  listContainer: {
-    paddingBottom: 16,
-  },
-  trainTile: {
-    width: width - 24, // Full width minus padding
-    marginBottom: 12,
-    borderRadius: 12,
-    padding: 16,
-    shadowColor: "#000",
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.1,
-    shadowRadius: 4,
-    elevation: 3,
-  },
-  lightTile: {
-    backgroundColor: '#fff',
-  },
-  darkTile: {
-    backgroundColor: '#2a2a2a',
-  },
-  trainHeader: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    marginBottom: 12,
-  },
-  trainName: {
-    fontSize: 16,
-    fontWeight: 'bold',
-    flex: 1,
-    color: '#333',
-  },
-  darkText: {
-    color: '#fff',
-  },
-  darkSecondaryText: {
-    color: '#bbb',
-  },
-  dateContainer: {
-    flexDirection: 'row',
-    alignItems: 'center',
-  },
-  dateText: {
-    fontSize: 12,
-    color: '#666',
-    marginRight: 6,
-  },
-  routeContainer: {
-    flexDirection: 'row',
-  },
-  stationContainer: {
-    flex: 4,
-  },
-  arrowContainer: {
-    flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  stationLabel: {
-    fontSize: 12,
-    color: '#888',
-    marginBottom: 2,
-  },
-  stationName: {
-    fontSize: 14,
-    fontWeight: '500',
-    color: '#333',
-    marginBottom: 2,
-  },
-  timeText: {
-    fontSize: 13,
-    color: '#666',
-  },
-  delayText: {
-    fontSize: 12,
-    fontWeight: 'bold',
-    color: '#ff3b30',
-    marginLeft: 8,
-    paddingHorizontal: 6,
-    paddingVertical: 2,
-    borderRadius: 4,
-    backgroundColor: 'rgba(255, 59, 48, 0.1)',
-  },
-  loadingFooter: {
-    paddingVertical: 20,
-    alignItems: 'center',
-  },
-});
 
 export default SearchResultsScreen;

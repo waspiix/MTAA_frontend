@@ -1,5 +1,5 @@
 import React, { useState, useCallback, useRef } from "react";
-import { View, Text, TextInput, FlatList, TouchableOpacity, Alert, Switch, Keyboard, TouchableWithoutFeedback } from "react-native";
+import { View, Text, TextInput, useWindowDimensions ,FlatList, TouchableOpacity, Alert, Switch, Keyboard, TouchableWithoutFeedback } from "react-native";
 import { DateTimePickerAndroid } from "@react-native-community/datetimepicker";
 import config from "../config.json";
 import { useNavigation } from "@react-navigation/native";
@@ -20,9 +20,11 @@ const HomeScreen = () => {
   const [debounceTimeout, setDebounceTimeout] = useState(null);
   const navigation = useNavigation();
   const { isDarkMode } = useTheme();
-  const styles = getStyles(isDarkMode);
   const { user } = useUser();
   const [isNewsChecked, setIsNewsChecked] = useState(false);
+  const { width } = useWindowDimensions();
+  const isTablet = width >= 768;
+  const styles = getStyles(isDarkMode, isTablet);
 
   const fromInputRef = useRef(null);
   const toInputRef = useRef(null);
