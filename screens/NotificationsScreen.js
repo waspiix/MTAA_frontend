@@ -9,7 +9,7 @@ const NotificationsScreen = () => {
   const { isDarkMode, isBiggerText } = useTheme();
   const { width } = useWindowDimensions();
   const isTablet = width >= 768;
-  const styles = getStyles(isDarkMode, isTablet ,isBiggerText); 
+  const styles = getStyles(isDarkMode, isTablet, isBiggerText); 
 
   // Získaj aktuálny dátum raz pre všetky notifikácie
   const now = new Date();
@@ -18,22 +18,28 @@ const NotificationsScreen = () => {
     .padStart(2, '0')}.${now.getFullYear()}`;
 
   return (
-    <ScrollView style={{ flex: 1, padding: 20 }}>
-      {notifications.map((notif) => (
-        <View key={notif.id} style={styles.tile}>
-          <View style={{ flexDirection: 'row', alignItems: 'center' }}>
-            <Image
-              source={require("../assets/notification.png")}
-              style={styles.smallProfileImage}
-            />
-            <View style={{ marginLeft: 10 }}>
-              <Text style={styles.tileTitle}>{notif.title}</Text>
-              <Text style={styles.tileSubtitle}>{notif.body}</Text>
-              <Text style={styles.tileSubtitleTime}>{formattedDate}</Text>
+    <ScrollView style={[styles.container, { padding: 20 }]}>
+      {notifications.length === 0 ? (
+        <View style={styles.emptyContainer}>
+          <Text style={styles.emptyText}>No notifications</Text>
+        </View>
+      ) : (
+        notifications.map((notif) => (
+          <View key={notif.id} style={styles.tile}>
+            <View style={styles.notificationRow}>
+              <Image
+                source={require("../assets/notification.png")}
+                style={styles.smallProfileImage}
+              />
+              <View style={styles.notificationContent}>
+                <Text style={styles.tileTitle}>{notif.title}</Text>
+                <Text style={styles.tileSubtitle}>{notif.body}</Text>
+                <Text style={styles.tileSubtitleTime}>{formattedDate}</Text>
+              </View>
             </View>
           </View>
-        </View>
-      ))}
+        ))
+      )}
     </ScrollView>
   );
 };
