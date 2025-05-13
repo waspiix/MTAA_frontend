@@ -116,48 +116,72 @@ const Profile = () => {
   };
 
   const handleImagePick = async () => {
-    
     const permissionResult = await ImagePicker.requestMediaLibraryPermissionsAsync();
 
-    if (permissionResult.granted === false) {
+    if (!permissionResult.granted) {
       Alert.alert("Permission Denied", "Permission to access media library is required!");
       return;
     }
 
-    // Spustíme knižnicu na výber obrázku
     const result = await ImagePicker.launchImageLibraryAsync({
-      mediaTypes: 'Images',  
+      mediaTypes: 'Images',
+      allowsEditing: true,
+      aspect: [1, 1],
       quality: 1,
     });
 
-    if (!result.canceled) {
-      console.log(result.uri); // Zobrazí URI obrázku, ktorý bol vybraný
-    } else {
-      Alert.alert("No image selected", "You did not select any image.");
+    if (!result.canceled && result.assets.length > 0) {
+      const selectedImage = result.assets[0];
+      setEditData(prev => ({
+        ...prev,
+        profileImage: selectedImage.uri,
+      }));
     }
   };
+  
 
   const handleProfileUpdate = async () => {
     try {
+      const formData = new FormData();
+
+      formData.append("first_name", editData.firstname);
+      formData.append("last_name", editData.lastname);
+      formData.append("email", editData.email);
+
+      if (editData.password) {
+        formData.append("password", editData.password);
+        formData.append("password_confirmation", editData.passwordConfirmation);
+      }
+
+      if (editData.discountCard) {
+        formData.append("card_id", editData.discountCard);
+      }
+
+      if (editData.profileImage) {
+        const filename = editData.profileImage.split("/").pop();
+        const match = /\.(\w+)$/.exec(filename ?? "");
+        const ext = match?.[1] ?? "jpg";
+        const type = `image/${ext}`;
+
+        formData.append("profile_image", {
+          uri: editData.profileImage,
+          name: filename,
+          type,
+        });
+      }
+
       const response = await fetch(`${config.API_URL}/update-profile`, {
         method: "POST",
         headers: {
-          "Content-Type": "application/json",
-          Accept: "application/json",
-          Authorization: `Bearer ${user.token}`,
+          "Accept": "application/json",
+          "Authorization": `Bearer ${user.token}`,
+          // !! POZOR: NEpridávaj Content-Type, nech si ho nastaví FormData sám!
         },
-        body: JSON.stringify({
-          first_name: editData.firstname,
-          last_name: editData.lastname,
-          email: editData.email,
-          password: editData.password || undefined,
-          password_confirmation: editData.passwordConfirmation || undefined,
-          card_id: editData.discountCard || undefined,
-        }),
+        body: formData,
       });
-  
+
       const data = await response.json();
-  
+
       if (response.ok) {
         setUser({
           ...user,
@@ -166,6 +190,7 @@ const Profile = () => {
           email: data.user.email,
           card_id: data.user.card_id || null,
           discount: data.user.discount?.name || null,
+          profileImage: data.user.profile_image || null,
         });
         setEditMode(false);
         Alert.alert("Úspech", data.message || "Profil bol aktualizovaný.");
@@ -177,6 +202,7 @@ const Profile = () => {
       Alert.alert("Chyba", "Nepodarilo sa pripojiť k serveru.");
     }
   };
+
 
   const handleLogout = async () => {
     try {
@@ -268,7 +294,11 @@ const Profile = () => {
       <View style={styles.profileCard}>
         {/* Ak je obrázok, zobrazíme ho, inak predvolený obrázok */}
         <Image
-          source={editData.profileImage ? { uri: editData.profileImage } : require("../assets/profile_icon.png")}
+          source={
+            user.profileImage
+              ? { uri: user.profileImage }
+              : require("../assets/profile_icon.png")
+          }
           style={styles.profileImage}
         />
       <Text style={styles.info}> <Text style={styles.label}>Meno:</Text> {user.firstname}</Text>

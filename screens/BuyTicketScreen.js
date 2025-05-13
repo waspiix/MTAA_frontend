@@ -33,7 +33,7 @@ export default function BuyTicketScreen({ route, navigation }) {
 
   // Funkcia na získanie obrázku vlaku podľa mena
   const getTrainImage = (trainName) => {
-    console.log(train.name);
+
     if (!trainName) return require('../assets/trains/default.jpg');
 
     const typeMatch = trainName.match(/^[A-Za-z]{2}/);
