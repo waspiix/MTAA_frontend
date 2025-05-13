@@ -3,7 +3,7 @@ import { View, Text, Alert, TouchableOpacity, ScrollView, Image, Modal, Button, 
 import config from '../config.json';
 import { Ionicons } from '@expo/vector-icons';
 import { useUser } from '../context/UserContext';
-import { useTheme } from '../context/ThemeContext';
+import { useTheme } from '../context/ThemeAndTextContext';
 import { getStyles } from '../styles';
 import { useState } from 'react';
 import { Picker } from '@react-native-picker/picker';
@@ -11,8 +11,8 @@ import { Picker } from '@react-native-picker/picker';
 export default function BuyTicketScreen({ route, navigation }) {
   const { train } = route.params;
   const { user } = useUser();
-  const { isDarkMode } = useTheme();
-  const styles = getStyles(isDarkMode);
+  const { isDarkMode, isBiggerText } = useTheme();
+  const styles = getStyles(isDarkMode, isTablet ,isBiggerText); 
 
   // sluzi pre rezervaciu miesta
   const [modalVisible, setModalVisible] = useState(false);

@@ -1,13 +1,15 @@
 import React from 'react';
-import { View, Text, Image, ScrollView } from 'react-native';
+import { View, Text, Image, ScrollView, useWindowDimensions } from 'react-native';
 import { useNotifications } from '../context/NotificationsContext';
 import { getStyles } from '../styles';
-import { useTheme } from '../context/ThemeContext';
+import { useTheme } from '../context/ThemeAndTextContext';
 
 const NotificationsScreen = () => {
   const { notifications } = useNotifications();
-  const { isDarkMode } = useTheme();
-  const styles = getStyles(isDarkMode);
+  const { isDarkMode, isBiggerText } = useTheme();
+  const { width } = useWindowDimensions();
+  const isTablet = width >= 768;
+  const styles = getStyles(isDarkMode, isTablet ,isBiggerText); 
 
   // Získaj aktuálny dátum raz pre všetky notifikácie
   const now = new Date();

@@ -4,7 +4,7 @@ import { DateTimePickerAndroid } from "@react-native-community/datetimepicker";
 import config from "../config.json";
 import { useNavigation } from "@react-navigation/native";
 import Icon from "react-native-vector-icons/FontAwesome";
-import { useTheme } from '../context/ThemeContext';
+import { useTheme } from '../context/ThemeAndTextContext';
 import { getStyles } from "../styles";
 import { useUser } from '../context/UserContext';
 
@@ -19,12 +19,12 @@ const HomeScreen = () => {
   const [time, setTime] = useState(new Date());
   const [debounceTimeout, setDebounceTimeout] = useState(null);
   const navigation = useNavigation();
-  const { isDarkMode } = useTheme();
   const { user } = useUser();
   const [isNewsChecked, setIsNewsChecked] = useState(false);
   const { width } = useWindowDimensions();
   const isTablet = width >= 768;
-  const styles = getStyles(isDarkMode, isTablet);
+  const { isDarkMode, isBiggerText, isHighContrast } = useTheme();
+  const styles = getStyles(isDarkMode, isTablet ,isBiggerText, isHighContrast); 
 
   const fromInputRef = useRef(null);
   const toInputRef = useRef(null);
@@ -159,7 +159,7 @@ const HomeScreen = () => {
 
         {user.privilege === 2 && (
           <View style={ styles.row}>
-            <Text style={{ marginLeft: 10, color: isDarkMode ? "#fff" : "#000" }}>ADMIN - Zadaj aktualitu spoju</Text>
+            <Text style={[{ marginLeft: 10 }, styles.label_notif]}>ADMIN - Zadaj aktualitu spoju</Text>
             <Switch
               value={isNewsChecked}
               onValueChange={setIsNewsChecked}

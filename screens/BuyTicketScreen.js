@@ -3,7 +3,7 @@ import { View, Text, Alert, TouchableOpacity, ScrollView, Image, Modal, useWindo
 import config from '../config.json';
 import { Ionicons } from '@expo/vector-icons';
 import { useUser } from '../context/UserContext';
-import { useTheme } from '../context/ThemeContext';
+import { useTheme } from '../context/ThemeAndTextContext';
 import { getStyles } from '../styles';
 import { useState } from 'react';
 import { Picker } from '@react-native-picker/picker';
@@ -11,10 +11,10 @@ import { Picker } from '@react-native-picker/picker';
 export default function BuyTicketScreen({ route, navigation }) {
   const { train } = route.params;
   const { user } = useUser();
-  const { isDarkMode } = useTheme();
   const { width } = useWindowDimensions();
   const isTablet = width >= 768;
-  const styles = getStyles(isDarkMode, isTablet);
+  const { isDarkMode, isBiggerText, isHighContrast } = useTheme();
+  const styles = getStyles(isDarkMode, isTablet ,isBiggerText, isHighContrast);
 
   // sluzi pre rezervaciu miesta
   const [modalVisible, setModalVisible] = useState(false);
@@ -26,14 +26,15 @@ export default function BuyTicketScreen({ route, navigation }) {
 
   const trainImages = {
     Ex: require('../assets/trains/express_train.jpg'),
-    OS: require('../assets/trains/osobny_train.jpg'),
+    Os: require('../assets/trains/osobny_train.jpg'),
   };
 
   // Funkcia na získanie obrázku vlaku podľa mena
   const getTrainImage = (trainName) => {
+    console.log(train.name);
     if (!trainName) return require('../assets/trains/default.jpg');
 
-    const typeMatch = trainName.match(/^[A-Za-z]+/);
+    const typeMatch = trainName.match(/^[A-Za-z]{2}/);
     if (!typeMatch) return require('../assets/trains/default.jpg');
 
     const type = typeMatch[0];

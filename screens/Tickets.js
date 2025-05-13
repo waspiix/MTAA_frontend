@@ -13,7 +13,7 @@ import QRCode from "react-native-qrcode-svg";
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import config from "../config.json";
 import { useUser } from "../context/UserContext";
-import { useTheme } from '../context/ThemeContext';
+import { useTheme } from '../context/ThemeAndTextContext';
 
 const TICKETS_STORAGE_KEY = 'user_tickets';
 const LAST_SYNC_KEY = 'tickets_last_sync';

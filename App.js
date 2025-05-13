@@ -8,7 +8,7 @@ import { Platform, Alert } from 'react-native';
 import { UserProvider, useUser } from './context/UserContext';
 import config from './config'; // Make sure this import exists
 
-import { useTheme } from './context/ThemeContext'; // Import your theme context
+import { useTheme } from './context/ThemeAndTextContext'; // Import your theme context
 // screen imports
 import HomeScreen from './screens/HomeScreen';
 import Profile from './screens/Profile';
@@ -24,7 +24,7 @@ import NotificationsScreen from './screens/NotificationsScreen';
 
 import TicketInfo from './screens/TicketInfo';
 import Settings from './screens/SettingsScreen';
-import { ThemeProvider } from './context/ThemeContext';
+import { ThemeProvider } from './context/ThemeAndTextContext';
 import { NotificationsProvider } from './context/NotificationsContext';
 
 Notifications.setNotificationHandler({

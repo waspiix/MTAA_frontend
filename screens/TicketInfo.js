@@ -13,7 +13,7 @@ import QRCode from "react-native-qrcode-svg";
 import MapView, { Polyline, Marker } from "react-native-maps";
 import * as Location from "expo-location";
 import TimeLine from "../components/TimeLine";
-import { useTheme } from '../context/ThemeContext';
+import { useTheme } from '../context/ThemeAndTextContext';
 import { getStyles } from '../styles';
 
 const TicketInfo = ({ route }) => {

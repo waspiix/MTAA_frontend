@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from "react";
 import {
   View,
+  Button,
   Text,
   TextInput,
   TouchableOpacity,
@@ -12,15 +13,16 @@ import {
 import config from "../config.json";
 import { useUser } from "../context/UserContext";
 import AsyncStorage from "@react-native-async-storage/async-storage";
-import { useTheme } from '../context/ThemeContext';
+import { useTheme } from '../context/ThemeAndTextContext';
 import { getStyles } from "../styles";
+import * as ImagePicker from 'expo-image-picker';
 
 const Profile = () => {
   const { user, setUser } = useUser();
-  const { isDarkMode } = useTheme();
   const { width } = useWindowDimensions();
   const isTablet = width >= 768;
-  const styles = getStyles(isDarkMode, isTablet);
+  const { isDarkMode, isBiggerText, isHighContrast } = useTheme();
+  const styles = getStyles(isDarkMode, isTablet ,isBiggerText, isHighContrast);  
 
 
   const [isRegister, setIsRegister] = useState(false);
@@ -39,6 +41,8 @@ const Profile = () => {
     email: "",
     password: "",
     passwordConfirmation: "",
+    discountCard: "",
+    profileImage: null,
   });
 
   // Nastavíme editData automaticky po načítaní používateľa
@@ -51,6 +55,7 @@ const Profile = () => {
         password: "",
         passwordConfirmation: "",
         discountCard: user.card_id || "",
+        profileImage: user.profile_image || null,
       });
     }
   }, [user]);
@@ -107,6 +112,28 @@ const Profile = () => {
     } catch (error) {
       console.error(error);
       Alert.alert("Error", "Could not connect to server.");
+    }
+  };
+
+  const handleImagePick = async () => {
+    
+    const permissionResult = await ImagePicker.requestMediaLibraryPermissionsAsync();
+
+    if (permissionResult.granted === false) {
+      Alert.alert("Permission Denied", "Permission to access media library is required!");
+      return;
+    }
+
+    // Spustíme knižnicu na výber obrázku
+    const result = await ImagePicker.launchImageLibraryAsync({
+      mediaTypes: 'Images',  
+      quality: 1,
+    });
+
+    if (!result.canceled) {
+      console.log(result.uri); // Zobrazí URI obrázku, ktorý bol vybraný
+    } else {
+      Alert.alert("No image selected", "You did not select any image.");
     }
   };
 
@@ -222,6 +249,10 @@ const Profile = () => {
         onChangeText={(value) => handleEditChange("discountCard", value)}
       />
 
+      <TouchableOpacity style={styles.buttonImage} onPress={handleImagePick}>
+        <Text style={styles.buttonText}>Nahraj obrázok</Text>
+      </TouchableOpacity>
+
       <TouchableOpacity style={styles.button} onPress={handleProfileUpdate}>
         <Text style={styles.buttonText}>Uložiť zmeny</Text>
       </TouchableOpacity>
@@ -235,10 +266,11 @@ const Profile = () => {
       </>
       ) : (
       <View style={styles.profileCard}>
-      <Image
-        source={require("../assets/profile_icon.png")}
-        style={styles.profileImage}
-      />
+        {/* Ak je obrázok, zobrazíme ho, inak predvolený obrázok */}
+        <Image
+          source={editData.profileImage ? { uri: editData.profileImage } : require("../assets/profile_icon.png")}
+          style={styles.profileImage}
+        />
       <Text style={styles.info}> <Text style={styles.label}>Meno:</Text> {user.firstname}</Text>
       <Text style={styles.info}> <Text style={styles.label}>Priezvisko:</Text> {user.lastname}</Text>
       <Text style={styles.info}> <Text style={styles.label}>Email:</Text> {user.email}</Text>

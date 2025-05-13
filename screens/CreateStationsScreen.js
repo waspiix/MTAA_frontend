@@ -11,7 +11,7 @@ import {
 } from 'react-native';
 import config from '../config.json';
 import { useNavigation } from '@react-navigation/native';
-import { useTheme } from '../context/ThemeContext';
+import { useTheme } from '../context/ThemeAndTextContext';
 import { getStyles } from "../styles";
 
 export default function CreateStationScreen() {

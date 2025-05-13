@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { View, Text, FlatList, ActivityIndicator, TouchableOpacity, useWindowDimensions, StyleSheet, Dimensions } from 'react-native';
-import { useTheme } from '../context/ThemeContext';
+import { useTheme } from '../context/ThemeAndTextContext';
 import { getStyles } from "../styles";
 import config from "../config.json";
 import Icon from 'react-native-vector-icons/FontAwesome';
@@ -14,10 +14,10 @@ const SearchResultsScreen = ({ route, navigation }) => {
   const [trains, setTrains] = useState(initialTrains);
   const [pagination, setPagination] = useState(initialPagination);
   const [loading, setLoading] = useState(false);
-  const { isDarkMode } = useTheme();
   const { width } = useWindowDimensions();
   const isTablet = width >= 768;
-  const styles = getStyles(isDarkMode, isTablet);
+  const { isDarkMode, isBiggerText, isHighContrast } = useTheme();
+  const styles = getStyles(isDarkMode, isTablet ,isBiggerText, isHighContrast);
   const { isNewsChecked = false } = route.params;
   const { user } = useUser();
 
