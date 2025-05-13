@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from "react";
+import { useFocusEffect } from "@react-navigation/native";
 import {
   View,
   Text,
@@ -86,11 +87,16 @@ const Tickets = ({ navigation }) => {
     }
   };
 
-  useEffect(() => {
+useFocusEffect(
+  React.useCallback(() => {
+    setLoading(true);
     loadLocalTickets().then(() => {
       fetchTickets();
     });
-  }, []);
+    
+    return () => {}; // Cleanup function
+  }, [token]) // Add token as dependency to refresh if user changes
+);
 
   const handleRefresh = () => {
     fetchTickets(false);
