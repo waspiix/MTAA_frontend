@@ -29,8 +29,6 @@
       "extends": "base"
     },
     "base": {
-      "node": "18.17.0",
-      "yarn": "1.22.19",
       "resourceClass": "medium"
     }
   },

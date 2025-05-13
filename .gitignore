@@ -8,9 +8,9 @@ node_modules/
 dist/
 web-build/
 expo-env.d.ts
-config.json
+
 package-lock.json
-package.json
+
 
 # Native
 *.orig.*
