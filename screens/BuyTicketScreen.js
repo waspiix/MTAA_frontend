@@ -23,6 +23,8 @@ export default function BuyTicketScreen({ route, navigation }) {
   const [reservationText, setReservationText] = useState('');
   const [travelClass, setTravelClass] = useState('2');
   const [isLoading, setIsLoading] = useState(false);
+  const [errorModalVisible, setErrorModalVisible] = useState(false);
+  const [errorMessage, setErrorMessage] = useState('');
 
   const trainImages = {
     Ex: require('../assets/trains/express_train.jpg'),
@@ -90,6 +92,9 @@ export default function BuyTicketScreen({ route, navigation }) {
       });
 
       if (!response.ok) {
+        const errorData = await response.json();
+        setErrorMessage(errorData.error );
+        setErrorModalVisible(true);
         throw new Error(`HTTP error! status: ${response.status}`);
       }
 
@@ -99,7 +104,6 @@ export default function BuyTicketScreen({ route, navigation }) {
       navigation.navigate('PaymentScreen', { paymentUrl });
     } catch (error) {
       console.error(error);
-      Alert.alert('Error', 'Failed to start payment. Please try again.');
     } finally {
       setIsLoading(false);
     }
@@ -266,6 +270,21 @@ export default function BuyTicketScreen({ route, navigation }) {
           <Text style={styles.buttonText}>Potvrdiť objednávku</Text>
         )}
       </TouchableOpacity>
+
+      <Modal
+        animationType="slide"
+        transparent={true}
+        visible={errorModalVisible}
+        onRequestClose={() => setErrorModalVisible(false)}
+      >
+        <View style={styles.modalOverlay}>
+          <View style={styles.modalContent}>
+            <Text style={styles.modalTitle}>Error</Text>
+            <Text style={styles.tileSubtitle}>{errorMessage}</Text>
+            <Button title="Close" onPress={() => setErrorModalVisible(false)} />
+          </View>
+        </View>
+      </Modal>
     </ScrollView>
   );
 }
